@@ -65,6 +65,39 @@ async def on_message(msg):
                     description='please add that [to the wiki](https://farm.chainwiki.dev/en/contribute)!',
                     )
             await msg.channel.send(embed=embed)
+        if 'trade' in msg.content:
+            embed = discord.Embed(
+                    title='**How To Buy FARM :bar_chart:**',
+                    )
+            embed.add_field(
+                    name = 'Token Info :mag:',
+                    value = '[0xa0246c9032bC3A600820415aE600c6388619A14D](https://etherscan.io/address/0xa0246c9032bc3a600820415ae600c6388619a14d)',
+                    inline = False
+                    )
+            embed.add_field(
+                    name = 'Uniswap :arrows_counterclockwise:',
+                    value = '[swap now](https://app.uniswap.org/#/swap?outputCurrency=0xa0246c9032bc3a600820415ae600c6388619a14d), '
+                            '[pool info](https://uniswap.info/token/0xa0246c9032bc3a600820415ae600c6388619a14d)',
+                    inline = True
+                    )
+            embed.add_field(
+                    name = 'DEX Aggregators :arrow_right::arrow_left:',
+                    value = '[debank](https://debank.com/swap?to=0xa0246c9032bc3a600820415ae600c6388619a14d), '
+                            '[1inch](https://1inch.exchange/#/USDC/FARM), '
+                            '[limit orders](https://1inch.exchange/#/limit-order/USDC/FARM)',
+                    inline = True
+                    )
+            embed.add_field(
+                    name = 'Trading Stats :chart_with_upwards_trend:',
+                    value = '[CoinGecko](https://www.coingecko.com/en/coins/harvest-finance), '
+                            '[CoinMarketCap](https://coinmarketcap.com/currencies/harvest-finance/), '
+                            '[DeBank](https://debank.com/projects/harvest), '
+                            '[dapp.com](https://www.dapp.com/app/harvest-finance), '
+                            'defipulse (soon!)',
+                    inline = False
+                    )
+            await msg.channel.send(embed=embed)
+            
 
 def main():
     client.run(DISCORD_BOT_TOKEN)
