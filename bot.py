@@ -53,6 +53,7 @@ vault_addr = {
     'frenbtc'     : {'addr': '0xfBe122D0ba3c75e1F7C80bd27613c9f35B81FEeC',},
     'fcrvrenwbtc' : {'addr': '0x192E9d29D43db385063799BC239E772c3b6888F3', 'startblock': 10815917},
     'fweth'       : {'addr': '0x8e298734681adbfC41ee5d17FF8B0d6d803e7098',},
+    'fycrv'       : {'addr': '0xF2B223Eb3d2B382Ead8D85f3c1b7eF87c1D35f3A',},
 }
 
 
@@ -140,6 +141,7 @@ async def on_message(msg):
                             '[CoinMarketCap](https://coinmarketcap.com/currencies/harvest-finance/), '
                             '[DeBank](https://debank.com/projects/harvest), '
                             '[dapp.com](https://www.dapp.com/app/harvest-finance), '
+                            #'[defiprime](https://defiprime.com/product/harvest), '
                             'defipulse (soon!)',
                     inline = False
                     )
@@ -147,24 +149,29 @@ async def on_message(msg):
         if '!vault' in msg.content:
             vault = msg.content.split(' ')[-1].lower()
             underlying = vault[1:]
-            shareprice, vault_total, vault_buffer = get_vaultstate(vault)
+            address, shareprice, vault_total, vault_buffer, vault_target = get_vaultstate(vault)
             vault_invested = vault_total - vault_buffer
             embed = discord.Embed(
                     title=f'{vault} Vault State :bank::mag:',
-                    description=f':moneybag: {vault} share price = {shareprice} {underlying}\n'
+                    description=f':map: {vault} address: [{address}](https://etherscan.io/address/{address})\n'
+                                f':moneybag: {vault} share price = {shareprice} {underlying}\n'
                                 f':sponge: {underlying} withdrawal buffer = {vault_buffer:,.2f} {underlying}\n'
-                                f':bar_chart: {underlying} invested = {vault_invested:,.2f} {underlying} ({100*vault_invested/vault_total:0.2f}%)\n'
+                                f':bar_chart: {underlying} invested = {vault_invested:,.2f} '
+                                f'{underlying} ({100*vault_invested/vault_total:0.2f}%, target {100*vault_target:0.2f}%)\n'
                     )
             await msg.channel.send(embed=embed)
 
 def get_vaultstate(vault):
-    vault_contract = w3.eth.contract(address=vault_addr[vault]['addr'], abi=VAULT_ABI)
+    vault_address = vault_addr[vault]['addr']
+    vault_contract = w3.eth.contract(address=vault_address, abi=VAULT_ABI)
     vault_decimals = vault_contract.functions['decimals']().call()
     vault_shareprice = vault_contract.functions['getPricePerFullShare']().call()*10**(-1*vault_decimals)
     vault_total = vault_contract.functions['underlyingBalanceWithInvestment']().call()*10**(-1*vault_decimals)
     vault_buffer = vault_contract.functions['underlyingBalanceInVault']().call()*10**(-1*vault_decimals)
-    return (vault_shareprice, vault_total, vault_buffer)
-
+    vault_target_numerator = vault_contract.functions['vaultFractionToInvestNumerator']().call()
+    vault_target_denominator = vault_contract.functions['vaultFractionToInvestDenominator']().call()
+    vault_target = vault_target_numerator / vault_target_denominator
+    return (vault_address, vault_shareprice, vault_total, vault_buffer, vault_target)
 
 def main():
     client.run(DISCORD_BOT_TOKEN)
