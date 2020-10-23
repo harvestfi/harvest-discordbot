@@ -12,7 +12,7 @@ from discord.ext import commands, tasks
 from web3 import Web3
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 DISCORD_WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
@@ -46,16 +46,45 @@ vaults = {
 
 
 vault_addr = {
-    'fdai'        : {'addr': '0xe85C8581e60D7Cd32Bbfd86303d2A4FA6a951Dac',},
-    'fusdc'       : {'addr': '0xc3F7ffb5d5869B3ade9448D094d81B0521e8326f',},
-    'fusdt'       : {'addr': '0xc7EE21406BB581e741FBb8B21f213188433D9f2F',},
-    'fwbtc'       : {'addr': '0xc07EB91961662D275E2D285BdC21885A4Db136B0',},
-    'frenbtc'     : {'addr': '0xfBe122D0ba3c75e1F7C80bd27613c9f35B81FEeC',},
-    'fcrvrenwbtc' : {'addr': '0x192E9d29D43db385063799BC239E772c3b6888F3', 'startblock': 10815917},
-    'fweth'       : {'addr': '0x8e298734681adbfC41ee5d17FF8B0d6d803e7098',},
+    'fdai'        : {'addr': '0xab7FA2B2985BCcfC13c6D86b1D5A17486ab1e04C',},
+    'fusdc'       : {'addr': '0xf0358e8c3CD5Fa238a29301d0bEa3D63A17bEdBE',},
+    'fusdt'       : {'addr': '0x053c80eA73Dc6941F518a68E2FC52Ac45BDE7c9C',},
+    'fwbtc'       : {'addr': '0x5d9d25c7C457dD82fc8668FFC6B9746b674d4EcB',},
+    'frenbtc'     : {'addr': '0xC391d1b08c1403313B0c28D47202DFDA015633C4',},
+    'fcrvrenwbtc' : {'addr': '0x9aA8F427A17d6B0d91B6262989EdC7D45d6aEdf8', 'startblock': 10815917},
+    'fweth'       : {'addr': '0xFE09e53A81Fe2808bc493ea64319109B5bAa573e',},
     'fycrv'       : {'addr': '0xF2B223Eb3d2B382Ead8D85f3c1b7eF87c1D35f3A',},
+    'ftusd'       : {'addr': '0x7674622c63Bee7F46E86a4A5A18976693D54441b',},
+    'funi-eth-wbtc': {'addr': '0x01112a60f427205dcA6E229425306923c3Cc2073',},
+    'funi-eth-usdt': {'addr': '0x7DDc3ffF0612E75Ea5ddC0d6Bd4e268f70362Cff',},
+    'funi-eth-usdc': {'addr': '0xA79a083FDD87F73c2f983c5551EC974685D6bb36',},
+    'funi-eth-dai':  {'addr': '0x307E2752e8b8a9C29005001Be66B1c012CA9CDB7',},
+    'fsushi-wbtc-tbtc': {'addr': '0xF553E1f826f42716cDFe02bde5ee76b2a52fc7EB',},
 }
 
+earlyemissions = [
+    57569.10,
+    51676.20,
+    26400.00,
+    24977.50
+]
+
+def emissions(weeknum):
+    weeknum = int(weeknum)
+    emitted_this_week = 0
+    supply_this_week = 0
+    EMISSIONS_WEEK5 = 23555.00
+    EMISSIONS_WEEKLY_SCALE = 0.95554375
+    if weeknum > 208:
+        emitted_this_week = 0
+        supply_this_week = 690420
+    elif weeknum >= 5:
+        emitted_this_week = EMISSIONS_WEEK5 * EMISSIONS_WEEKLY_SCALE ** (weeknum - 5)
+        supply_this_week = sum(earlyemissions) + EMISSIONS_WEEK5 * (1 - EMISSIONS_WEEKLY_SCALE ** (weeknum - 4) ) / (1 - EMISSIONS_WEEKLY_SCALE)
+    else:
+        emitted_this_week = earlyemissions[weeknum-1]
+        supply_this_week = sum(earlyemissions[:weeknum])
+    return emitted_this_week, supply_this_week
 
 client = discord.Client(command_prefix='!')
 activity_start = discord.Streaming(
@@ -104,7 +133,7 @@ async def on_message(msg):
             embed = discord.Embed(
                     title='When do I get the CRV/SWRV/UNI/&etc? :thinking:',
                     description='Farmed tokens are sold to grow the value of your deposit :seedling: '
-                                '[read more](https://farm.chainwiki.dev/en/strategy)',
+                                '[read more about farming strategies](https://farm.chainwiki.dev/en/strategy)',
                     )
             await msg.channel.send(embed=embed)
         if '!contribute' in msg.content:
@@ -112,6 +141,63 @@ async def on_message(msg):
                     title='**:sparkles: Great Idea :sparkles:**',
                     description='please add that [to the wiki](https://farm.chainwiki.dev/en/contribute)!',
                     )
+            await msg.channel.send(embed=embed)
+        if '!ap' in msg.content:
+            val = float(msg.content.split(' ')[-1])
+            # APY = (1 + APR / n) ** n - 1
+            APYfromAPR_daily = 100 * ((1 + val / (100 * 365)) ** 365 - 1)
+            APYfromAPR_weekly = 100 * ((1 + val / (100 * 52)) ** 52 - 1)
+            # APR = n * (1 + APY) ** (1 / n) -n
+            APRfromAPY_daily = 100 * (365 * ((1 + val / 100) ** (1 / 365)) - 365)
+            APRfromAPY_weekly = 100 * (52 * ((1 + val / 100) ** (1 / 52)) - 52)
+            embed = discord.Embed(
+                    title=':man_teacher: **Convert between APR and APY?**',
+                    )
+            embed.add_field(name = 'Compounded Daily', value = 'If you redeem and reinvest rewards daily...', inline=False)
+            embed.add_field(
+                    name = f'APR to APY',
+                    value = f'{val:,.2f}% APR is equal to {APYfromAPR_daily:,.2f}% APY. $1000 will make about ${1000*val/100/365:,.2f} per day.',
+                    inline = True
+                    )
+            embed.add_field(
+                    name = f'APY to APR',
+                    value = f'{val:,.2f}% APY is equal to {APRfromAPY_daily:,.2f}% APR. $1000 will make about ${1000*APRfromAPY_daily/100/365:,.2f} per day.',
+                    inline = True
+                    )
+            embed.add_field(name = 'Compounded Weekly', value = 'If you redeem and reinvest rewards weekly...', inline=False)
+            embed.add_field(
+                    name = f'APR to APY',
+                    value = f'{val:,.2f}% APR is equal to {APYfromAPR_weekly:,.2f}% APY. $1000 will make about ${1000*val/100/365:,.2f} per day.',
+                    inline = True
+                    )
+            embed.add_field(
+                    name = f'APY to APR',
+                    value = f'{val:,.2f}% APY is equal to {APRfromAPY_weekly:,.2f}% APR. $1000 will make about ${1000*APRfromAPY_weekly/100/365:,.2f} per day.',
+                    inline = True
+                    )
+            await msg.channel.send(embed=embed)
+        if '!supply' in msg.content:
+            embed = discord.Embed(
+                    title=':bar_chart: **What is the FARM token supply?**',
+                    )
+            embed.add_field(
+                    name = 'Maximum Supply',
+                    value = 'Emission is capped at 690,420 FARM tokens. 630,741.56 (91.4%) will be emitted in the first year.',
+                    inline = False
+                    )
+            if 'week' in msg.content:
+                    weeknum = msg.content.split(' ')[-1]
+                    emissions_this_week, supply_this_week = emissions(weeknum)
+                    embed.add_field(
+                            name = f'Emissions during Week {weeknum}',
+                            value = f'{emissions_this_week:,.2f} FARM will be emitted',
+                            inline = True
+                            )
+                    embed.add_field(
+                            name = f'Supply at the end of Week {weeknum}',
+                            value = f'{supply_this_week:,.2f} FARM total supply',
+                            inline = True
+                            )
             await msg.channel.send(embed=embed)
         if '!trade' in msg.content:
             embed = discord.Embed(
@@ -155,8 +241,8 @@ async def on_message(msg):
                     title=f'{vault} Vault State :bank::mag:',
                     description=f':map: {vault} address: [{address}](https://etherscan.io/address/{address})\n'
                                 f':moneybag: {vault} share price = {shareprice} {underlying}\n'
-                                f':sponge: {underlying} withdrawal buffer = {vault_buffer:,.2f} {underlying}\n'
-                                f':bar_chart: {underlying} invested = {vault_invested:,.2f} '
+                                f':sponge: {underlying} withdrawal buffer = {vault_buffer:,.4f} {underlying}\n'
+                                f':bar_chart: {underlying} invested = {vault_invested:,.4f} '
                                 f'{underlying} ({100*vault_invested/vault_total:0.2f}%, target {100*vault_target:0.2f}%)\n'
                     )
             await msg.channel.send(embed=embed)
