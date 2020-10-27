@@ -23,7 +23,10 @@ UNIROUTER_ABI = os.getenv("UNIROUTER_ABI")
 UNIPOOL_ADDR= os.getenv("UNIPOOL_ADDR")
 UNIPOOL_ABI = os.getenv("UNIPOOL_ABI")
 VAULT_ABI = os.getenv("VAULT_ABI")
+PS_ABI = os.getenv("PS_ABI")
 ONE_18DEC = 1000000000000000000
+ZERO_ADDR = '0x0000000000000000000000000000000000000000'
+FARM_ADDR = '0xa0246c9032bC3A600820415aE600c6388619A14D'
 
 w3 = Web3(Web3.HTTPProvider(NODE_URL))
 controller_contract = w3.eth.contract(address=UNIROUTER_ADDR, abi=UNIROUTER_ABI)
@@ -42,6 +45,7 @@ vaults = {
   '0xB19EbFB37A936cCe783142955D39Ca70Aa29D43c': {'asset': 'fUNI-ETH-USDT', 'decimals': 18,},
   '0x63671425ef4D25Ec2b12C7d05DE855C143f16e3B': {'asset': 'fUNI-ETH-USDC', 'decimals': 18,},
   '0x1a9F22b4C385f78650E7874d64e442839Dc32327': {'asset': 'fUNI-ETH-DAI', 'decimals': 18,},
+  '0x8f5adC58b32D4e5Ca02EAC0E293D35855999436C': {'asset': 'FARM', 'decimals': 18,},
 }
 
 
@@ -60,6 +64,7 @@ vault_addr = {
     'funi-eth-usdc': {'addr': '0xA79a083FDD87F73c2f983c5551EC974685D6bb36',},
     'funi-eth-dai':  {'addr': '0x307E2752e8b8a9C29005001Be66B1c012CA9CDB7',},
     'fsushi-wbtc-tbtc': {'addr': '0xF553E1f826f42716cDFe02bde5ee76b2a52fc7EB',},
+    'profitshare': {'addr': '0x8f5adC58b32D4e5Ca02EAC0E293D35855999436C',},
 }
 
 earlyemissions = [
@@ -98,7 +103,7 @@ async def on_ready():
     await client.change_presence(activity=activity_start)
     update_price.start()
 
-@tasks.loop(seconds=120)
+@tasks.loop(seconds=15)
 async def update_price():
     print(f'fetching pool reserves...')
     poolvals = pool_contract.functions['getReserves']().call()
@@ -235,7 +240,7 @@ async def on_message(msg):
         if '!vault' in msg.content:
             vault = msg.content.split(' ')[-1].lower()
             underlying = vault[1:]
-            address, shareprice, vault_total, vault_buffer, vault_target = get_vaultstate(vault)
+            address, shareprice, vault_total, vault_buffer, vault_target, vault_strat, vault_strat_future, vault_strat_future_time = get_vaultstate(vault)
             vault_invested = vault_total - vault_buffer
             embed = discord.Embed(
                     title=f'{vault} Vault State :bank::mag:',
@@ -244,20 +249,88 @@ async def on_message(msg):
                                 f':sponge: {underlying} withdrawal buffer = {vault_buffer:,.4f} {underlying}\n'
                                 f':bar_chart: {underlying} invested = {vault_invested:,.4f} '
                                 f'{underlying} ({100*vault_invested/vault_total:0.2f}%, target {100*vault_target:0.2f}%)\n'
+                                f':compass: vault strategy: [{vault_strat}](https://etherscan.io/address/{vault_strat})\n'
+                    )
+            if vault_strat_future_time != 0:
+                vault_update_dt = datetime.datetime.fromtimestamp(vault_strat_future_time)
+                embed.description += f':rocket: future strategy: [{vault_strat_future}](https://etherscan.io/address/{vault_strat_future})\n'
+                vault_update_timeleft = ( vault_update_dt - datetime.datetime.now() )
+                if vault_update_timeleft.total_seconds() < 0:
+                    embed.description += f':alarm_clock: future strategy can be activated at any time; [subscribe to updates on Twitter](https://twitter.com/farmer_fud)'
+                else:
+                    embed.description += f':alarm_clock: future strategy can be activated at {vault_update_dt} GMT '
+                    embed.description += f'({vault_update_timeleft.total_seconds()/3600:.1f} hours); [subscribe to updates on Twitter](https://twitter.com/farmer_fud)'
+            else:
+                embed.description += f':alarm_clock: no strategy updates are pending; [subscribe to updates on Twitter](https://twitter.com/farmer_fud)'
+            await msg.channel.send(embed=embed)
+        if '!profitshare' in msg.content:
+            ps_address = vault_addr['profitshare']['addr']
+            ps_deposits, ps_rewardperday, ps_rewardfinish, ps_stake_frac = get_profitsharestate()
+            ps_apr = 100* (ps_rewardperday / ps_deposits) * 365
+            ps_timeleft = ( ps_rewardfinish - datetime.datetime.now() )
+            embed = discord.Embed(
+                    title=f':bank::mag: FARM Profit Sharing',
+                    description=f':map: Profitshare address: [{ps_address}](https://etherscan.io/address/{ps_address})\n'
+                                f':moneybag: Profitshare deposits: `{ps_deposits:,.2f}` FARM (`{100*ps_stake_frac:0.2f}%` of supply)\n'
+                                f':bar_chart: Profitshare rewards per day: `{ps_rewardperday:,.2f}` FARM'
+                                f' (`{ps_apr:.2f}%` instantaneous APR)\n'
+                                f':alarm_clock: Current harvests pay out until: `{ps_rewardfinish} GMT`'
+                                f' (`{ps_timeleft.total_seconds()/3600:.1f}` hours)'
                     )
             await msg.channel.send(embed=embed)
+        if '!uniswap' in msg.content:
+            uni_addr, uni_deposit_farm, uni_deposit_usdc, uni_farm_frac = get_uniswapstate()
+            embed = discord.Embed(
+                    title=f':mag: FARM:USDC Uniswap Pool',
+                    description=f':bank: Uniswap contract: [{uni_addr}](https://etherscan.io/address/{uni_addr})\n'
+                                f':moneybag: Liquidity: `{uni_deposit_farm:,.2f}` FARM (`{100*uni_farm_frac:.2f}%` of supply), `{uni_deposit_usdc:,.2f}` USDC\n'
+                                f':arrows_counterclockwise: [Trade FARM](https://app.uniswap.org/#/swap?outputCurrency=0xa0246c9032bc3a600820415ae600c6388619a14d), '
+                                f'[Add Liquidity](https://app.uniswap.org/#/add/0xa0246c9032bC3A600820415aE600c6388619A14D/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48), '
+                                f'[Remove Liquidity](https://app.uniswap.org/#/remove/0xa0246c9032bC3A600820415aE600c6388619A14D/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)\n'
+                                f':bar_chart: [FARM:USDC Uniswap chart](https://beta.dex.vision/?ticker=UniswapV2:FARMUSDC-0x514906FC121c7878424a5C928cad1852CC545892&interval=15)'
+                    )
+            await msg.channel.send(embed=embed)
+
+def get_uniswapstate():
+    uni_addr = UNIPOOL_ADDR
+    poolvals = pool_contract.functions['getReserves']().call()
+    uni_deposit_farm = poolvals[0]*10**-18
+    uni_deposit_usdc = poolvals[1]*10**-6
+    farm_contract = w3.eth.contract(address=FARM_ADDR, abi=VAULT_ABI)
+    farm_totalsupply = farm_contract.functions['totalSupply']().call()*10**-18
+    uni_farm_frac = uni_deposit_farm / farm_totalsupply
+    return (uni_addr, uni_deposit_farm, uni_deposit_usdc, uni_farm_frac)
+
+
+def get_profitsharestate():
+    ps_address = vault_addr['profitshare']['addr']
+    ps_contract = w3.eth.contract(address=ps_address, abi=PS_ABI)
+    lp_addr = ps_contract.functions['lpToken']().call()
+    lp_contract = w3.eth.contract(address=lp_addr, abi=VAULT_ABI)
+    ps_decimals = lp_contract.functions['decimals']().call()
+    lp_totalsupply = lp_contract.functions['totalSupply']().call()*10**(-1*ps_decimals)
+    ps_rewardrate = ps_contract.functions['rewardRate']().call()
+    ps_totalsupply = ps_contract.functions['totalSupply']().call()*10**(-1*ps_decimals)
+    ps_rewardfinish = ps_contract.functions['periodFinish']().call()
+    ps_rewardperday = ps_rewardrate * 3600 * 24 * 10**(-1*ps_decimals)
+    ps_rewardfinishdt = datetime.datetime.fromtimestamp(ps_rewardfinish)
+    ps_stake_frac = ps_totalsupply / lp_totalsupply
+    return (ps_totalsupply, ps_rewardperday, ps_rewardfinishdt, ps_stake_frac)
 
 def get_vaultstate(vault):
     vault_address = vault_addr[vault]['addr']
     vault_contract = w3.eth.contract(address=vault_address, abi=VAULT_ABI)
-    vault_decimals = vault_contract.functions['decimals']().call()
+    vault_strat = vault_contract.functions['strategy']().call()
+    vault_strat_future = vault_contract.functions['futureStrategy']().call()
+    vault_strat_future_time = int(vault_contract.functions['strategyUpdateTime']().call())
+    vault_decimals = int(vault_contract.functions['decimals']().call())
     vault_shareprice = vault_contract.functions['getPricePerFullShare']().call()*10**(-1*vault_decimals)
     vault_total = vault_contract.functions['underlyingBalanceWithInvestment']().call()*10**(-1*vault_decimals)
     vault_buffer = vault_contract.functions['underlyingBalanceInVault']().call()*10**(-1*vault_decimals)
     vault_target_numerator = vault_contract.functions['vaultFractionToInvestNumerator']().call()
     vault_target_denominator = vault_contract.functions['vaultFractionToInvestDenominator']().call()
     vault_target = vault_target_numerator / vault_target_denominator
-    return (vault_address, vault_shareprice, vault_total, vault_buffer, vault_target)
+    return (vault_address, vault_shareprice, vault_total, vault_buffer, vault_target, vault_strat, vault_strat_future, vault_strat_future_time)
 
 def main():
     client.run(DISCORD_BOT_TOKEN)
