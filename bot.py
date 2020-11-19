@@ -23,10 +23,12 @@ UNIROUTER_ABI = os.getenv("UNIROUTER_ABI")
 UNIPOOL_ADDR= os.getenv("UNIPOOL_ADDR")
 UNIPOOL_ABI = os.getenv("UNIPOOL_ABI")
 VAULT_ABI = os.getenv("VAULT_ABI")
+CURVEPOOL_ABI = os.getenv("CURVEPOOL_ABI")
 PS_ABI = os.getenv("PS_ABI")
 ONE_18DEC = 1000000000000000000
 ZERO_ADDR = '0x0000000000000000000000000000000000000000'
 FARM_ADDR = '0xa0246c9032bC3A600820415aE600c6388619A14D'
+
 
 w3 = Web3(Web3.HTTPProvider(NODE_URL))
 controller_contract = w3.eth.contract(address=UNIROUTER_ADDR, abi=UNIROUTER_ABI)
@@ -46,6 +48,17 @@ vaults = {
   '0x63671425ef4D25Ec2b12C7d05DE855C143f16e3B': {'asset': 'fUNI-ETH-USDC', 'decimals': 18,},
   '0x1a9F22b4C385f78650E7874d64e442839Dc32327': {'asset': 'fUNI-ETH-DAI', 'decimals': 18,},
   '0x8f5adC58b32D4e5Ca02EAC0E293D35855999436C': {'asset': 'FARM', 'decimals': 18,},
+  '0xef4Da1CE3f487DA2Ed0BE23173F76274E0D47579': {'asset': 'fCRV-USDN', 'decimals': 18,},
+  '0x6D1b6Ea108AA03c6993d8010690264BA96D349A8': {'asset': 'fyCRV', 'decimals': 18,},
+  '0x27F12d1a08454402175b9F0b53769783578Be7d9': {'asset': 'f3CRV', 'decimals': 18,},
+  '0x017eC1772A45d2cf68c429A820eF374f0662C57c': {'asset': 'fCRV-TBTC', 'decimals': 18,},
+  '0xC0f51a979e762202e9BeF0f62b07F600d0697DE1': {'asset': 'fCRV-COMPOUND', 'decimals': 18,},
+  '0x093C2ae5E6F3D2A897459aa24551289D462449AD': {'asset': 'fCRV-BUSD', 'decimals': 18,},
+  '0x9523FdC055F503F73FF40D7F66850F409D80EF34': {'asset': 'fSUSHI-WBTC-TBTC', 'decimals': 18,},
+  '0x76Aef359a33C02338902aCA543f37de4b01BA1FA': {'asset': 'fSUSHI-ETH-DAI', 'decimals': 18,},
+  '0x6B4e1E0656Dd38F36c318b077134487B9b0cf7a6': {'asset': 'fSUSHI-ETH-USDC', 'decimals': 18,},
+  '0xA56522BCA0A09f57B85C52c0Cc8Ba1B5eDbc64ef': {'asset': 'fSUSHI-ETH-USDT', 'decimals': 18,},
+  '0xE2D9FAe95f1e68afca7907dFb36143781f917194': {'asset': 'fSUSHI-ETH-WBTC', 'decimals': 18,},
 }
 
 
@@ -57,15 +70,50 @@ vault_addr = {
     'frenbtc'     : {'addr': '0xC391d1b08c1403313B0c28D47202DFDA015633C4',},
     'fcrvrenwbtc' : {'addr': '0x9aA8F427A17d6B0d91B6262989EdC7D45d6aEdf8', 'startblock': 10815917},
     'fweth'       : {'addr': '0xFE09e53A81Fe2808bc493ea64319109B5bAa573e',},
-    'fycrv'       : {'addr': '0xF2B223Eb3d2B382Ead8D85f3c1b7eF87c1D35f3A',},
+    'fycrv'       : {'addr': '0x0FE4283e0216F94f5f9750a7a11AC54D3c9C38F3',},
+    'f3crv'       : {'addr': '0x71B9eC42bB3CB40F017D8AD8011BE8e384a95fa5',},
+    'fcrvtbtc'    : {'addr': '0x640704D106E79e105FDA424f05467F005418F1B5',},
     'ftusd'       : {'addr': '0x7674622c63Bee7F46E86a4A5A18976693D54441b',},
     'funi-eth-wbtc': {'addr': '0x01112a60f427205dcA6E229425306923c3Cc2073',},
     'funi-eth-usdt': {'addr': '0x7DDc3ffF0612E75Ea5ddC0d6Bd4e268f70362Cff',},
     'funi-eth-usdc': {'addr': '0xA79a083FDD87F73c2f983c5551EC974685D6bb36',},
     'funi-eth-dai':  {'addr': '0x307E2752e8b8a9C29005001Be66B1c012CA9CDB7',},
     'fsushi-wbtc-tbtc': {'addr': '0xF553E1f826f42716cDFe02bde5ee76b2a52fc7EB',},
+    'fsushi-eth-usdc': {'addr': '0x01bd09A1124960d9bE04b638b142Df9DF942b04a',},
+    'fsushi-eth-usdt': {'addr': '0x64035b583c8c694627A199243E863Bb33be60745',},
+    'fsushi-eth-wbtc': {'addr': '0x5C0A3F55AAC52AA320Ff5F280E77517cbAF85524',},
+    'fsushi-eth-dai': {'addr': '0x203E97aa6eB65A1A02d9E80083414058303f241E',},
     'profitshare': {'addr': '0x8f5adC58b32D4e5Ca02EAC0E293D35855999436C',},
+    'fcrvbusd': {'addr': '0x4b1cBD6F6D8676AcE5E412C78B7a59b4A1bbb68a'},
+    'fcrvusdn': {'addr': '0x683E683fBE6Cf9b635539712c999f3B3EdCB8664'},
+    'fcrvcompound': {'addr': '0x998cEb152A42a3EaC1f555B1E911642BeBf00faD'}
 }
+
+tokens_price = {
+    'uni-eth-dai': {'addr': '0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11', 'decimals0': 18, 'decimals1': 18, 'decimalsTotal': 18 }, #0:DAI 1:WETH
+    'uni-eth-wbtc': {'addr': '0xBb2b8038a1640196FbE3e38816F3e67Cba72D940', 'decimals0': 8, 'decimals1': 18, 'decimalsTotal': 18 }, #0:WBTC 1:WETH
+    'uni-eth-usdt': {'addr': '0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852', 'decimals0': 18, 'decimals1': 6,'decimalsTotal': 18 }, #0:WETH 1:USDT
+    'uni-eth-usdc': {'addr': '0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc', 'decimals0': 6, 'decimals1': 18, 'decimalsTotal': 18}, #0:USDC 1:WETH
+    'uni-eth-comp': {'addr': '0xCFfDdeD873554F362Ac02f8Fb1f02E5ada10516f', 'decimals0': 18, 'decimals1': 18, 'decimalsTotal': 18}, #0:COMP 1:WETH
+    '3crv': {'addr': '0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7', 'decimalsTotal': 18},
+    'ycrv': {'addr': '0x45F783CCE6B7FF23B2ab2D70e416cdb7D6055f51', 'decimalsTotal': 18},
+    'crvtbtc': {'addr': '0xC25099792E9349C7DD09759744ea681C7de2cb66', 'decimalsTotal': 18},
+    'crvcompound': {'addr': '0xA2B47E3D5c44877cca798226B7B8118F9BFb7A56', 'decimalsTotal': 18},
+    'crvbusd': {'addr': '0x79a8C46DeA5aDa233ABaFFD40F3A0A2B1e5A4F27', 'decimalsTotal': 18},
+    'crvusdn': {'addr': '0x0f9cb53Ebe405d49A0bbdBD291A65Ff571bC83e1', 'decimalsTotal': 18},
+    'crvrenwbtc': {'addr': '0x93054188d876f558f4a66B2EF1d97d16eDf0895B', 'decimalsTotal': 18},
+    'sushi-wbtc-tbtc': {'addr': '0x2Dbc7dD86C6cd87b525BD54Ea73EBeeBbc307F68', 'decimals0': 8, 'decimals1': 18,'decimalsTotal': 18}, #0:WBTC 1:TBTC
+    'sushi-eth-usdc': {'addr': '0x397FF1542f962076d0BFE58eA045FfA2d347ACa0', 'decimals0': 6, 'decimals1': 18,'decimalsTotal': 18}, #0:USDC 1:WETH
+    'sushi-eth-usdt': {'addr': '0x06da0fd433C1A5d7a4faa01111c044910A184553', 'decimals0': 18, 'decimals1': 6,'decimalsTotal': 18}, #0:WETH 1:USDT
+    'sushi-eth-wbtc': {'addr': '0xCEfF51756c56CeFFCA006cD410B03FFC46dd3a58', 'decimals0': 8, 'decimals1': 18,'decimalsTotal': 18}, #0:WBTC 1:WETH
+    'sushi-eth-dai': {'addr': '0xC3D03e4F041Fd4cD388c549Ee2A29a9E5075882f', 'decimals0': 18, 'decimals1': 18,'decimalsTotal': 18}, #0:DAI 1:WETH
+        }
+assets = ['weth', 'wbtc', 'uni-eth-wbtc', 'uni-eth-dai', 'uni-eth-usdc', 'uni-eth-usdt', '3crv', 'ycrv', 'crvtbtc', 'crvcompound', 'crvbusd', 'crvusdn', 'crvrenwbtc', 'renbtc', 'usdc', 'usdt', 'tusd', 'dai', 'sushi-wbtc-tbtc', 'lp', 'sushi-eth-wbtc', 'sushi-eth-dai', 'sushi-eth-usdc', 'sushi-eth-usdt', 'total', 'farm']
+# global variables with locked value in USD and price of asset in each pool
+locked, prices = {}, {}
+for a in assets:
+    locked[a] = 0
+    prices[a] = 0
 
 earlyemissions = [
     57569.10,
@@ -91,6 +139,7 @@ def emissions(weeknum):
         supply_this_week = sum(earlyemissions[:weeknum])
     return emitted_this_week, supply_this_week
 
+
 client = discord.Client(command_prefix='!')
 activity_start = discord.Streaming(
                 name='the prices',
@@ -102,6 +151,7 @@ async def on_ready():
     print('We have logged in as {0.user}'.format(client))
     await client.change_presence(activity=activity_start)
     update_price.start()
+    update_tvl.start()
 
 @tasks.loop(seconds=15)
 async def update_price():
@@ -109,7 +159,7 @@ async def update_price():
     poolvals = pool_contract.functions['getReserves']().call()
     print(f'calculating price...')
     price = controller_contract.functions['quote'](ONE_18DEC, poolvals[0], poolvals[1]).call()*10**-6
-    
+
     print(f'updating the price...')
     msg = f'${price:0.2f} FARM'
     new_price = discord.Streaming(
@@ -117,6 +167,8 @@ async def update_price():
         url='https://uniswap.info/token/0xa0246c9032bc3a600820415ae600c6388619a14d'
     )
     print(msg)
+    global prices
+    prices['farm'] = price
     await client.change_presence(activity=new_price)
 
 @client.event
@@ -290,6 +342,121 @@ async def on_message(msg):
                                 f':bar_chart: [FARM:USDC Uniswap chart](https://beta.dex.vision/?ticker=UniswapV2:FARMUSDC-0x514906FC121c7878424a5C928cad1852CC545892&interval=15)'
                     )
             await msg.channel.send(embed=embed)
+        if '!tvl' in msg.content:
+            embed = discord.Embed(
+                    title = 'Total Value Locked in Harvest',
+                    description = ':bar_chart: Calculated with :bar_chart:'
+                    )
+            embed.add_field(
+                    name = 'WBTC',
+                    value = f':moneybag: `{prices["wbtc"]:,.2f}` :moneybag:',
+                    inline = True
+                    )
+            embed.add_field(
+                    name = 'ETH',
+                    value = f':moneybag: `{prices["weth"]:,.2f}` :moneybag:',
+                    inline = True
+                    )
+            embed.add_field(
+                    name = ':bank: Vaults :bank:',
+                    value = f'```'
+                            f'ETH\t${locked["weth"]:,.2f}\n'
+                            f'WBTC\t${locked["wbtc"]:,.2f}\n'
+                            f'UNI-ETH-WBTC\t${locked["uni-eth-wbtc"]:,.2f}\n'
+                            f'UNI-ETH-DAI\t${locked["uni-eth-dai"]:,.2f}\n'
+                            f'UNI-ETH-USDC\t${locked["uni-eth-usdc"]:,.2f}\n'
+                            f'UNI-ETH-USDT\t${locked["uni-eth-usdt"]:,.2f}\n'
+                            f'3CRV\t${locked["3crv"]:,.2f}\n'
+                            f'yCRV\t${locked["ycrv"]:,.2f}\n'
+                            f'CRV:TBTC\t${locked["crvtbtc"]:,.2f}\n'
+                            f'CRV:COMPOUND\t${locked["crvcompound"]:,.2f}\n'
+                            f'CRV:BUSD\t${locked["crvbusd"]:,.2f}\n'
+                            f'CRV:USDN\t${locked["crvusdn"]:,.2f}\n'
+                            f'CRV:RENWBTC\t${locked["crvrenwbtc"]:,.2f}\n'
+                            f'RENBTC\t${locked["renbtc"]:,.2f}\n'
+                            f'USDC\t${locked["usdc"]:,.2f}\n'
+                            f'USDT\t${locked["usdt"]:,.2f}\n'
+                            f'TUSD\t${locked["tusd"]:,.2f}\n'
+                            f'DAI\t${locked["dai"]:,.2f}\n'
+                            f'SUSHI-WBTC-TBTC\t${locked["sushi-wbtc-tbtc"]:,.2f}\n'
+                            f'SUSHI-ETH-WBTC\t${locked["sushi-eth-wbtc"]:,.2f}\n'
+                            f'SUSHI-ETH-DAI\t${locked["sushi-eth-dai"]:,.2f}\n'
+                            f'SUSHI-ETH-USDC\t${locked["sushi-eth-usdc"]:,.2f}\n'
+                            f'SUSHI-ETH-USDT\t${locked["sushi-eth-usdt"]:,.2f}\n'
+                            f'PROFIT SHARE\t${locked["farm"]:,.2f}\n'
+                            f'FARM/USDC UNI LP\t${locked["lp"]:,.2f}\n'
+                            f'```',
+                    inline = False
+                    )
+            embed.add_field(
+                    name = 'Total',
+                    value = f':bank::moneybag: `${locked["total"]:,.2f}` :moneybag::bank:',
+                    inline = False
+                    )
+            await msg.channel.send(embed=embed)
+
+def get_lockedinvault(token):
+    vault_contract = w3.eth.contract(address=vault_addr[token]['addr'], abi=VAULT_ABI)
+    vault_decimals = int(vault_contract.functions['decimals']().call())
+    vault_total = vault_contract.functions['underlyingBalanceWithInvestment']().call()*10**(-1*vault_decimals)
+    return vault_total
+
+def get_tokenprice(token, id):
+    pool_contract = w3.eth.contract(address=tokens_price[token]['addr'], abi=UNIPOOL_ABI)
+    poolvals = pool_contract.functions['getReserves']().call()
+    price = controller_contract.functions['quote'](10**(tokens_price[token]['decimals0' if (id == 0) else 'decimals1']), poolvals[id], poolvals[1 if (id == 0) else 0]).call()*10**(-1*tokens_price[token]['decimals1' if (id == 0) else 'decimals0'])
+    return price
+
+def get_lptokenprice(token, price0, price1):
+    pool_contract = w3.eth.contract(address=tokens_price[token]['addr'], abi=UNIPOOL_ABI)
+    poolvals = pool_contract.functions['getReserves']().call()
+    price = (poolvals[0]*10**(-1*tokens_price[token]['decimals0'])*price0+poolvals[1]*10**(-1*tokens_price[token]['decimals1'])*price1)/(pool_contract.functions['totalSupply']().call()*10**(-1*tokens_price[token]['decimalsTotal']))
+    return price
+
+def get_curveprice(token):
+    pool_contract = w3.eth.contract(address=tokens_price[token]['addr'], abi=CURVEPOOL_ABI)
+    return pool_contract.functions['get_virtual_price']().call()*10**(-1*tokens_price[token]['decimalsTotal'])
+
+def get_lockedfarm():
+    lp_contract = w3.eth.contract(address=UNIPOOL_ADDR, abi=UNIPOOL_ABI)
+    poolvals = lp_contract.functions['getReserves']().call()
+    locked_lp = poolvals[0]*10**-18*prices['farm']+poolvals[1]*10**-6
+    ps_contract = w3.eth.contract(address=vault_addr['profitshare']['addr'], abi=UNIPOOL_ABI)
+    locked_ps = ps_contract.functions['totalSupply']().call()*10**-18*prices['farm']
+    return locked_ps, locked_lp
+
+@tasks.loop(seconds=130)
+async def update_tvl():
+    global locked, prices
+    print('fetching tvl data...')
+    start = datetime.datetime.now()
+
+    for s in ['usdt','usdc','dai','tusd']: prices[s] = 1
+    for c in ['3crv','ycrv','crvcompound','crvbusd','crvusdn']: prices[c] = get_curveprice(c)
+    prices['weth'] = get_tokenprice('uni-eth-usdc', 1)*prices['usdc']
+    prices['wbtc'] = get_tokenprice('uni-eth-wbtc', 0)*prices['weth']
+    prices['renbtc'] = prices['wbtc']
+    prices['uni-eth-wbtc'] = get_lptokenprice('uni-eth-wbtc', prices['wbtc'], prices['weth'])
+    prices['uni-eth-dai'] = get_lptokenprice('uni-eth-dai', prices['dai'], prices['weth'])
+    prices['uni-eth-usdc'] = get_lptokenprice('uni-eth-usdc', prices['usdc'], prices['weth'])
+    prices['uni-eth-usdt'] = get_lptokenprice('uni-eth-usdt', prices['weth'], prices['usdt'])
+    prices['crvtbtc'] = get_curveprice('crvtbtc')*prices['wbtc']
+    prices['crvrenwbtc'] = get_curveprice('crvrenwbtc')*prices['wbtc']
+    prices['sushi-wbtc-tbtc'] = get_lptokenprice('sushi-wbtc-tbtc',prices['wbtc'],prices['wbtc'])
+    prices['sushi-eth-wbtc'] = get_lptokenprice('sushi-eth-wbtc', prices['wbtc'], prices['weth'])
+    prices['sushi-eth-dai'] = get_lptokenprice('sushi-eth-dai', prices['dai'], prices['weth'])
+    prices['sushi-eth-usdc'] = get_lptokenprice('sushi-eth-usdc', prices['usdc'], prices['weth'])
+    prices['sushi-eth-usdt'] = get_lptokenprice('sushi-eth-usdt', prices['weth'], prices['usdt'])
+    
+    for a in assets:
+        if a in ['total','farm','lp']: pass
+        else: locked[a] = get_lockedinvault('f'+a)*prices[a]
+
+    locked['farm'], locked['lp'] = get_lockedfarm() 
+    locked['total'] = 0
+    for a in assets: 
+        if a != 'total': locked['total'] += locked[a]
+    print (f'TVL ${locked["total"]:,.4f} fetched in {(datetime.datetime.now()-start).total_seconds()}s')
 
 def get_uniswapstate():
     uni_addr = UNIPOOL_ADDR
@@ -337,3 +504,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
