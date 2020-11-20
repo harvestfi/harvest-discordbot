@@ -108,7 +108,7 @@ tokens_price = {
     'sushi-eth-wbtc': {'addr': '0xCEfF51756c56CeFFCA006cD410B03FFC46dd3a58', 'decimals0': 8, 'decimals1': 18,'decimalsTotal': 18}, #0:WBTC 1:WETH
     'sushi-eth-dai': {'addr': '0xC3D03e4F041Fd4cD388c549Ee2A29a9E5075882f', 'decimals0': 18, 'decimals1': 18,'decimalsTotal': 18}, #0:DAI 1:WETH
         }
-assets = ['weth', 'wbtc', 'uni-eth-wbtc', 'uni-eth-dai', 'uni-eth-usdc', 'uni-eth-usdt', '3crv', 'ycrv', 'crvtbtc', 'crvcompound', 'crvbusd', 'crvusdn', 'crvrenwbtc', 'renbtc', 'usdc', 'usdt', 'tusd', 'dai', 'sushi-wbtc-tbtc', 'lp', 'sushi-eth-wbtc', 'sushi-eth-dai', 'sushi-eth-usdc', 'sushi-eth-usdt', 'total', 'farm']
+assets = ['weth', 'wbtc', '3crv', 'ycrv', 'crvtbtc', 'crvcompound', 'crvbusd', 'crvusdn', 'crvrenwbtc', 'renbtc', 'usdc', 'usdt', 'tusd', 'dai', 'lp', 'sushi-eth-wbtc', 'sushi-eth-dai', 'sushi-eth-usdc', 'sushi-eth-usdt', 'total', 'farm']
 # global variables with locked value in USD and price of asset in each pool
 locked, prices = {}, {}
 for a in assets:
@@ -349,51 +349,58 @@ async def on_message(msg):
                     )
             embed.add_field(
                     name = 'WBTC',
-                    value = f':moneybag: `{prices["wbtc"]:,.2f}` :moneybag:',
+                    value = f':moneybag: `${prices["wbtc"]:,.2f}` :moneybag:',
                     inline = True
                     )
             embed.add_field(
                     name = 'ETH',
-                    value = f':moneybag: `{prices["weth"]:,.2f}` :moneybag:',
+                    value = f':moneybag: `${prices["weth"]:,.2f}` :moneybag:',
                     inline = True
                     )
             embed.add_field(
                     name = ':bank: Vaults :bank:',
-                    value = f'```'
-                            f'ETH\t${locked["weth"]:,.2f}\n'
-                            f'WBTC\t${locked["wbtc"]:,.2f}\n'
-                            f'UNI-ETH-WBTC\t${locked["uni-eth-wbtc"]:,.2f}\n'
-                            f'UNI-ETH-DAI\t${locked["uni-eth-dai"]:,.2f}\n'
-                            f'UNI-ETH-USDC\t${locked["uni-eth-usdc"]:,.2f}\n'
-                            f'UNI-ETH-USDT\t${locked["uni-eth-usdt"]:,.2f}\n'
-                            f'3CRV\t${locked["3crv"]:,.2f}\n'
-                            f'yCRV\t${locked["ycrv"]:,.2f}\n'
-                            f'CRV:TBTC\t${locked["crvtbtc"]:,.2f}\n'
-                            f'CRV:COMPOUND\t${locked["crvcompound"]:,.2f}\n'
-                            f'CRV:BUSD\t${locked["crvbusd"]:,.2f}\n'
-                            f'CRV:USDN\t${locked["crvusdn"]:,.2f}\n'
-                            f'CRV:RENWBTC\t${locked["crvrenwbtc"]:,.2f}\n'
-                            f'RENBTC\t${locked["renbtc"]:,.2f}\n'
-                            f'USDC\t${locked["usdc"]:,.2f}\n'
-                            f'USDT\t${locked["usdt"]:,.2f}\n'
-                            f'TUSD\t${locked["tusd"]:,.2f}\n'
-                            f'DAI\t${locked["dai"]:,.2f}\n'
-                            f'SUSHI-WBTC-TBTC\t${locked["sushi-wbtc-tbtc"]:,.2f}\n'
-                            f'SUSHI-ETH-WBTC\t${locked["sushi-eth-wbtc"]:,.2f}\n'
-                            f'SUSHI-ETH-DAI\t${locked["sushi-eth-dai"]:,.2f}\n'
-                            f'SUSHI-ETH-USDC\t${locked["sushi-eth-usdc"]:,.2f}\n'
-                            f'SUSHI-ETH-USDT\t${locked["sushi-eth-usdt"]:,.2f}\n'
-                            f'PROFIT SHARE\t${locked["farm"]:,.2f}\n'
-                            f'FARM/USDC UNI LP\t${locked["lp"]:,.2f}\n'
-                            f'```',
+                    value = '```'+
+                            tvl_format('ETH', locked['weth'])+
+                            tvl_format('WBTC', locked['wbtc'])+
+                            tvl_format('3CRV', locked['3crv'])+
+                            tvl_format('yCRV', locked['ycrv'])+
+                            tvl_format('CRV:TBTC', locked['crvtbtc'])+
+                            tvl_format('CRV:COMPOUND', locked['crvcompound'])+
+                            tvl_format('CRV:BUSD', locked['crvbusd'])+
+                            tvl_format('CRV:USDN', locked['crvusdn'])+
+                            tvl_format('CRV:RENWBTC', locked['crvrenwbtc'])+
+                            tvl_format('RENBTC', locked['renbtc'])+
+                            tvl_format('USDC', locked['usdc'])+
+                            tvl_format('USDT', locked['usdt'])+
+                            tvl_format('TUSD', locked['tusd'])+
+                            tvl_format('DAI', locked['dai'])+
+                            tvl_format('SUSHI-ETH-WBTC', locked['sushi-eth-wbtc'])+
+                            tvl_format('SUSHI-ETH-DAI', locked['sushi-eth-dai'])+
+                            tvl_format('SUSHI-ETH-USDC', locked['sushi-eth-usdc'])+
+                            tvl_format('SUSHI-ETH-USDT', locked['sushi-eth-usdt'])+
+                            tvl_format('PROFIT SHARE', locked['farm'])+
+                            tvl_format('FARM/USDC UNI LP', locked['lp'])+
+                            '```',
                     inline = False
                     )
             embed.add_field(
                     name = 'Total',
-                    value = f':bank::moneybag: `${locked["total"]:,.2f}` :moneybag::bank:',
+                    value = f':bank::moneybag: `${locked["total"]:,.0f}` :moneybag::bank:',
                     inline = False
                     )
             await msg.channel.send(embed=embed)
+
+def human_readable(number):
+    for unit in ['','K','M','B']:
+        if abs(number) < 1000.0:
+            return f'{number:,.2f}{unit}'
+        number /= 1000.0
+    return f'{number:,.2f}T'
+
+def tvl_format(left:str, right:float, char:int = 16):
+    right = human_readable(right)
+    string = left.ljust(char, ' ')+right.rjust(8, ' ')+'\n'
+    return string
 
 def get_lockedinvault(token):
     vault_contract = w3.eth.contract(address=vault_addr[token]['addr'], abi=VAULT_ABI)
@@ -425,7 +432,7 @@ def get_lockedfarm():
     locked_ps = ps_contract.functions['totalSupply']().call()*10**-18*prices['farm']
     return locked_ps, locked_lp
 
-@tasks.loop(seconds=130)
+@tasks.loop(seconds=310)
 async def update_tvl():
     global locked, prices
     print('fetching tvl data...')
@@ -436,13 +443,8 @@ async def update_tvl():
     prices['weth'] = get_tokenprice('uni-eth-usdc', 1)*prices['usdc']
     prices['wbtc'] = get_tokenprice('uni-eth-wbtc', 0)*prices['weth']
     prices['renbtc'] = prices['wbtc']
-    prices['uni-eth-wbtc'] = get_lptokenprice('uni-eth-wbtc', prices['wbtc'], prices['weth'])
-    prices['uni-eth-dai'] = get_lptokenprice('uni-eth-dai', prices['dai'], prices['weth'])
-    prices['uni-eth-usdc'] = get_lptokenprice('uni-eth-usdc', prices['usdc'], prices['weth'])
-    prices['uni-eth-usdt'] = get_lptokenprice('uni-eth-usdt', prices['weth'], prices['usdt'])
     prices['crvtbtc'] = get_curveprice('crvtbtc')*prices['wbtc']
     prices['crvrenwbtc'] = get_curveprice('crvrenwbtc')*prices['wbtc']
-    prices['sushi-wbtc-tbtc'] = get_lptokenprice('sushi-wbtc-tbtc',prices['wbtc'],prices['wbtc'])
     prices['sushi-eth-wbtc'] = get_lptokenprice('sushi-eth-wbtc', prices['wbtc'], prices['weth'])
     prices['sushi-eth-dai'] = get_lptokenprice('sushi-eth-dai', prices['dai'], prices['weth'])
     prices['sushi-eth-usdc'] = get_lptokenprice('sushi-eth-usdc', prices['usdc'], prices['weth'])
