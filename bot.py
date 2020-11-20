@@ -63,30 +63,30 @@ vaults = {
 
 
 vault_addr = {
-    'fdai'        : {'addr': '0xab7FA2B2985BCcfC13c6D86b1D5A17486ab1e04C',},
-    'fusdc'       : {'addr': '0xf0358e8c3CD5Fa238a29301d0bEa3D63A17bEdBE',},
-    'fusdt'       : {'addr': '0x053c80eA73Dc6941F518a68E2FC52Ac45BDE7c9C',},
-    'fwbtc'       : {'addr': '0x5d9d25c7C457dD82fc8668FFC6B9746b674d4EcB',},
-    'frenbtc'     : {'addr': '0xC391d1b08c1403313B0c28D47202DFDA015633C4',},
-    'fcrvrenwbtc' : {'addr': '0x9aA8F427A17d6B0d91B6262989EdC7D45d6aEdf8', 'startblock': 10815917},
-    'fweth'       : {'addr': '0xFE09e53A81Fe2808bc493ea64319109B5bAa573e',},
-    'fycrv'       : {'addr': '0x0FE4283e0216F94f5f9750a7a11AC54D3c9C38F3',},
-    'f3crv'       : {'addr': '0x71B9eC42bB3CB40F017D8AD8011BE8e384a95fa5',},
-    'fcrvtbtc'    : {'addr': '0x640704D106E79e105FDA424f05467F005418F1B5',},
-    'ftusd'       : {'addr': '0x7674622c63Bee7F46E86a4A5A18976693D54441b',},
+    'fdai'        : {'addr': '0xab7FA2B2985BCcfC13c6D86b1D5A17486ab1e04C', 'decimals': 18},
+    'fusdc'       : {'addr': '0xf0358e8c3CD5Fa238a29301d0bEa3D63A17bEdBE', 'decimals': 6},
+    'fusdt'       : {'addr': '0x053c80eA73Dc6941F518a68E2FC52Ac45BDE7c9C', 'decimals': 6},
+    'fwbtc'       : {'addr': '0x5d9d25c7C457dD82fc8668FFC6B9746b674d4EcB', 'decimals': 8},
+    'frenbtc'     : {'addr': '0xC391d1b08c1403313B0c28D47202DFDA015633C4', 'decimals': 8},
+    'fcrvrenwbtc' : {'addr': '0x9aA8F427A17d6B0d91B6262989EdC7D45d6aEdf8', 'startblock': 10815917, 'decimals': 18},
+    'fweth'       : {'addr': '0xFE09e53A81Fe2808bc493ea64319109B5bAa573e', 'decimals': 18},
+    'fycrv'       : {'addr': '0x0FE4283e0216F94f5f9750a7a11AC54D3c9C38F3', 'decimals': 18},
+    'f3crv'       : {'addr': '0x71B9eC42bB3CB40F017D8AD8011BE8e384a95fa5', 'decimals': 18},
+    'fcrvtbtc'    : {'addr': '0x640704D106E79e105FDA424f05467F005418F1B5', 'decimals': 18},
+    'ftusd'       : {'addr': '0x7674622c63Bee7F46E86a4A5A18976693D54441b', 'decimals': 18},
     'funi-eth-wbtc': {'addr': '0x01112a60f427205dcA6E229425306923c3Cc2073',},
     'funi-eth-usdt': {'addr': '0x7DDc3ffF0612E75Ea5ddC0d6Bd4e268f70362Cff',},
     'funi-eth-usdc': {'addr': '0xA79a083FDD87F73c2f983c5551EC974685D6bb36',},
     'funi-eth-dai':  {'addr': '0x307E2752e8b8a9C29005001Be66B1c012CA9CDB7',},
     'fsushi-wbtc-tbtc': {'addr': '0xF553E1f826f42716cDFe02bde5ee76b2a52fc7EB',},
-    'fsushi-eth-usdc': {'addr': '0x01bd09A1124960d9bE04b638b142Df9DF942b04a',},
-    'fsushi-eth-usdt': {'addr': '0x64035b583c8c694627A199243E863Bb33be60745',},
-    'fsushi-eth-wbtc': {'addr': '0x5C0A3F55AAC52AA320Ff5F280E77517cbAF85524',},
-    'fsushi-eth-dai': {'addr': '0x203E97aa6eB65A1A02d9E80083414058303f241E',},
+    'fsushi-eth-usdc': {'addr': '0x01bd09A1124960d9bE04b638b142Df9DF942b04a', 'decimals': 18},
+    'fsushi-eth-usdt': {'addr': '0x64035b583c8c694627A199243E863Bb33be60745', 'decimals': 18},
+    'fsushi-eth-wbtc': {'addr': '0x5C0A3F55AAC52AA320Ff5F280E77517cbAF85524', 'decimals': 18},
+    'fsushi-eth-dai': {'addr': '0x203E97aa6eB65A1A02d9E80083414058303f241E', 'decimals': 18},
     'profitshare': {'addr': '0x8f5adC58b32D4e5Ca02EAC0E293D35855999436C',},
-    'fcrvbusd': {'addr': '0x4b1cBD6F6D8676AcE5E412C78B7a59b4A1bbb68a'},
-    'fcrvusdn': {'addr': '0x683E683fBE6Cf9b635539712c999f3B3EdCB8664'},
-    'fcrvcompound': {'addr': '0x998cEb152A42a3EaC1f555B1E911642BeBf00faD'}
+    'fcrvbusd': {'addr': '0x4b1cBD6F6D8676AcE5E412C78B7a59b4A1bbb68a', 'decimals': 18},
+    'fcrvusdn': {'addr': '0x683E683fBE6Cf9b635539712c999f3B3EdCB8664', 'decimals': 18},
+    'fcrvcompound': {'addr': '0x998cEb152A42a3EaC1f555B1E911642BeBf00faD', 'decimals': 18}
 }
 
 tokens_price = {
@@ -404,7 +404,7 @@ def tvl_format(left:str, right:float, char:int = 16):
 
 def get_lockedinvault(token):
     vault_contract = w3.eth.contract(address=vault_addr[token]['addr'], abi=VAULT_ABI)
-    vault_decimals = int(vault_contract.functions['decimals']().call())
+    vault_decimals = int(vault_addr[token]['decimals'])
     vault_total = vault_contract.functions['underlyingBalanceWithInvestment']().call()*10**(-1*vault_decimals)
     return vault_total
 
