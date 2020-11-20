@@ -161,7 +161,7 @@ async def update_price():
     price = controller_contract.functions['quote'](ONE_18DEC, poolvals[0], poolvals[1]).call()*10**-6
 
     print(f'updating the price...')
-    msg = f'${price:0.2f} FARM'
+    msg = f'${price:0.2f}\U0001F69C {human_readable(locked["total"])}\U0001F4B0'
     new_price = discord.Streaming(
         name=msg,
         url='https://uniswap.info/token/0xa0246c9032bc3a600820415ae600c6388619a14d'
