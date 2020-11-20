@@ -349,12 +349,12 @@ async def on_message(msg):
                     )
             embed.add_field(
                     name = 'WBTC',
-                    value = f':moneybag: `${prices["wbtc"]:,.2f}` :moneybag:',
+                    value = f'`${prices["wbtc"]:,.2f}` :moneybag:',
                     inline = True
                     )
             embed.add_field(
                     name = 'ETH',
-                    value = f':moneybag: `${prices["weth"]:,.2f}` :moneybag:',
+                    value = f'`${prices["weth"]:,.2f}` :moneybag:',
                     inline = True
                     )
             embed.add_field(
