@@ -82,7 +82,7 @@ vault_addr = {
     'frenbtc'     : {'addr': '0xC391d1b08c1403313B0c28D47202DFDA015633C4',
                      'pool': '0x7b8Ff8884590f44e10Ea8105730fe637Ce0cb4F6',
                      },
-    'fcrvrenwbtc' : {'addr': '0x9aA8F427A17d6B0d91B6262989EdC7D45d6aEdf8', 'startblock': 10815917,
+    'fcrv-renwbtc' : {'addr': '0x9aA8F427A17d6B0d91B6262989EdC7D45d6aEdf8', 'startblock': 10815917,
                      'pool': '0xA3Cf8D1CEe996253FAD1F8e3d68BDCba7B3A3Db5',
                      },
     'fweth'       : {'addr': '0xFE09e53A81Fe2808bc493ea64319109B5bAa573e',
@@ -91,37 +91,37 @@ vault_addr = {
     'ftusd'       : {'addr': '0x7674622c63Bee7F46E86a4A5A18976693D54441b',
                      'pool': '0xeC56a21CF0D7FeB93C25587C12bFfe094aa0eCdA',
                      },
-    'funi-eth-wbtc': {'addr': '0x01112a60f427205dcA6E229425306923c3Cc2073',
+    'funi-eth:wbtc': {'addr': '0x01112a60f427205dcA6E229425306923c3Cc2073',
                      'pool': '0xF1181A71CC331958AE2cA2aAD0784Acfc436CB93',
                      },
-    'funi-eth-usdt': {'addr': '0x7DDc3ffF0612E75Ea5ddC0d6Bd4e268f70362Cff',
+    'funi-eth:usdt': {'addr': '0x7DDc3ffF0612E75Ea5ddC0d6Bd4e268f70362Cff',
                      'pool': '0x75071F2653fBC902EBaff908d4c68712a5d1C960',
                      },
-    'funi-eth-usdc': {'addr': '0xA79a083FDD87F73c2f983c5551EC974685D6bb36',
+    'funi-eth:usdc': {'addr': '0xA79a083FDD87F73c2f983c5551EC974685D6bb36',
                      'pool': '0x156733b89Ac5C704F3217FEe2949A9D4A73764b5',
                      },
-    'funi-eth-dai':  {'addr': '0x307E2752e8b8a9C29005001Be66B1c012CA9CDB7',
+    'funi-eth:dai':  {'addr': '0x307E2752e8b8a9C29005001Be66B1c012CA9CDB7',
                      'pool': '0x7aeb36e22e60397098C2a5C51f0A5fB06e7b859c',
                      },
-    'fsushi-wbtc-tbtc': {'addr': '0xF553E1f826f42716cDFe02bde5ee76b2a52fc7EB',
+    'fsushi-wbtc:tbtc': {'addr': '0xF553E1f826f42716cDFe02bde5ee76b2a52fc7EB',
                      'pool': '0x9523FdC055F503F73FF40D7F66850F409D80EF34',
                      },
-    'fsushi-eth-dai': {
+    'fsushi-eth:dai': {
         'addr': '0x203E97aa6eB65A1A02d9E80083414058303f241E',
         'pool': '0x76Aef359a33C02338902aCA543f37de4b01BA1FA',
         'underlying': '0xC3D03e4F041Fd4cD388c549Ee2A29a9E5075882f',
         },
-    'fsushi-eth-usdt': {
+    'fsushi-eth:usdt': {
         'addr': '0x64035b583c8c694627A199243E863Bb33be60745',
         'pool': '0xA56522BCA0A09f57B85C52c0Cc8Ba1B5eDbc64ef',
         'underlying': '0x06da0fd433C1A5d7a4faa01111c044910A184553',
         },
-    'fsushi-eth-usdc': {
+    'fsushi-eth:usdc': {
         'addr': '0x01bd09A1124960d9bE04b638b142Df9DF942b04a',
         'pool': '0x6B4e1E0656Dd38F36c318b077134487B9b0cf7a6',
         'underlying': '0x397FF1542f962076d0BFE58eA045FfA2d347ACa0',
         },
-    'fsushi-eth-wbtc': {
+    'fsushi-eth:wbtc': {
         'addr': '0x5C0A3F55AAC52AA320Ff5F280E77517cbAF85524',
         'pool': '0xE2D9FAe95f1e68afca7907dFb36143781f917194',
         'underlying': '0xCEfF51756c56CeFFCA006cD410B03FFC46dd3a58',
@@ -129,22 +129,22 @@ vault_addr = {
     'profitshare': {'addr': '0x8f5adC58b32D4e5Ca02EAC0E293D35855999436C',
                     'pool': '0x25550Cccbd68533Fa04bFD3e3AC4D09f9e00Fc50',
                     },
-    'f3crv':       {'addr': '0x71B9eC42bB3CB40F017D8AD8011BE8e384a95fa5',
+    'fcrv-3pool':       {'addr': '0x71B9eC42bB3CB40F017D8AD8011BE8e384a95fa5',
                     'pool': '0x27F12d1a08454402175b9F0b53769783578Be7d9',
                     },
-    'fycrv':       {'addr': '0x0FE4283e0216F94f5f9750a7a11AC54D3c9C38F3',
+    'fcrv-ypool':       {'addr': '0x0FE4283e0216F94f5f9750a7a11AC54D3c9C38F3',
                     'pool': '0x6D1b6Ea108AA03c6993d8010690264BA96D349A8',
                     },
-    'fcrvtbtc':    {'addr': '0x640704D106E79e105FDA424f05467F005418F1B5',
+    'fcrv-tbtc':    {'addr': '0x640704D106E79e105FDA424f05467F005418F1B5',
                     'pool': '0x017eC1772A45d2cf68c429A820eF374f0662C57c',
                     },
-    'fcrvbusd':    {'addr': '0x4b1cBD6F6D8676AcE5E412C78B7a59b4A1bbb68a',
+    'fcrv-busd':    {'addr': '0x4b1cBD6F6D8676AcE5E412C78B7a59b4A1bbb68a',
                     'pool': '0x093C2ae5E6F3D2A897459aa24551289D462449AD',
                     },
-    'fcrvusdn':    {'addr': '0x683E683fBE6Cf9b635539712c999f3B3EdCB8664',
+    'fcrv-usdn':    {'addr': '0x683E683fBE6Cf9b635539712c999f3B3EdCB8664',
                     'pool': '0xef4Da1CE3f487DA2Ed0BE23173F76274E0D47579',
                     },
-    'fcrvcomp':    {'addr': '0x998cEb152A42a3EaC1f555B1E911642BeBf00faD',
+    'fcrv-comp':    {'addr': '0x998cEb152A42a3EaC1f555B1E911642BeBf00faD',
                     'pool': '0xC0f51a979e762202e9BeF0f62b07F600d0697DE1',
                     },
     'uniswap': {'addr': '0x514906FC121c7878424a5C928cad1852CC545892',
@@ -218,9 +218,9 @@ async def on_message(msg):
                                 ':teacher: `!apy {number}`: convert between APR and APY\n'
                                 ':thinking: `!payout`: information on farming rewards\n'
                                 ':bank: `!vault vaultname`: Harvest vault state of supported vaults\n'
-                                ':lock: `f{coin}`, `funi-eth-{coin}`, `fsushi-wbtc-tbtc`\n'
-                                ':rainbow: LP stables: `fycrv`, `f3crv`, `fcrvcomp`, `fcrvbusd`, `fcrvusdn`\n'
-                                ':rainbow: LP bitcoin: `fcrvrenwbtc`, `fcrvtbtc`\n'
+                                ':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
+                                ':rainbow: LP stables: `fcrv-ypool`, `fcrv-3pool`, `fcrv-comp`, `fcrv-busd`, `fcrv-usdn`\n'
+                                ':rainbow: LP bitcoin: `fcrv-renwbtc`, `fcrv-tbtc`\n'
                                 ':globe_with_meridians: `!contribute`: contribute to the community wiki\n'
                                 ':chart_with_upwards_trend: improve me [on GitHub](https://github.com/brandoncurtis/harvest-discordbot)'
                     )
