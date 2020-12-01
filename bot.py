@@ -385,11 +385,14 @@ async def on_message(msg):
             vault = msg.content.split(' ')[-2].lower()
             bal = int(msg.content.split(' ')[-1])
             delta_day, delta_week, delta_month = get_poolreturns(vault)
+            monthmsg = ''
+            if delta_month > 0:
+                monthmsg = f'\nRewards per `{bal:.2f}` {vault} per month: `{bal*delta_month:.4f}` FARM'
             embed = discord.Embed(
                     title=f':tractor: Historical FARM Returns',
                     description=f'Rewards per `{bal:.2f}` {vault} per day: `{bal*delta_day:.4f}` FARM\n'
                     f'Rewards per `{bal:.2f}` {vault} per week: `{bal*delta_week:.4f}` FARM'
-                    #f'Rewards per `{bal:.2f}` {vault} per month: `{bal*delta_month:.4f}` FARM'
+                    + monthmsg
                     )
             await msg.channel.send(embed=embed)
 
