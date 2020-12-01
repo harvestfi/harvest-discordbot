@@ -24,47 +24,132 @@ UNIPOOL_ADDR= os.getenv("UNIPOOL_ADDR")
 UNIPOOL_ABI = os.getenv("UNIPOOL_ABI")
 VAULT_ABI = os.getenv("VAULT_ABI")
 PS_ABI = os.getenv("PS_ABI")
+POOL_ABI = os.getenv("POOL_ABI")
+FARM_ADDR = '0xa0246c9032bC3A600820415aE600c6388619A14D'
+MODEL_ADDR = '0x814055779F8d2F591277b76C724b7AdC74fb82D9'
+
 ONE_18DEC = 1000000000000000000
 ZERO_ADDR = '0x0000000000000000000000000000000000000000'
-FARM_ADDR = '0xa0246c9032bC3A600820415aE600c6388619A14D'
+BLOCK_PER_DAY = 7200 #(60/12)*60*24
 
 w3 = Web3(Web3.HTTPProvider(NODE_URL))
 controller_contract = w3.eth.contract(address=UNIROUTER_ADDR, abi=UNIROUTER_ABI)
 pool_contract = w3.eth.contract(address=UNIPOOL_ADDR, abi=UNIPOOL_ABI)
 
 vaults = {
-  '0x8e298734681adbfC41ee5d17FF8B0d6d803e7098': {'asset': 'fWETH', 'decimals': 18,},
-  '0xe85C8581e60D7Cd32Bbfd86303d2A4FA6a951Dac': {'asset': 'fDAI', 'decimals': 18,},
-  '0xc3F7ffb5d5869B3ade9448D094d81B0521e8326f': {'asset': 'fUSDC', 'decimals': 6,},
-  '0xc7EE21406BB581e741FBb8B21f213188433D9f2F': {'asset': 'fUSDT', 'decimals': 6,},
+  '0x8e298734681adbfC41ee5d17FF8B0d6d803e7098': {'asset': 'fWETH-v0', 'decimals': 18,},
+  '0xe85C8581e60D7Cd32Bbfd86303d2A4FA6a951Dac': {'asset': 'fDAI-v0', 'decimals': 18,},
+  '0xc3F7ffb5d5869B3ade9448D094d81B0521e8326f': {'asset': 'fUSDC-v0', 'decimals': 6,},
+  '0xc7EE21406BB581e741FBb8B21f213188433D9f2F': {'asset': 'fUSDT-v0', 'decimals': 6,},
   '0xF2B223Eb3d2B382Ead8D85f3c1b7eF87c1D35f3A': {'asset': 'FARM yDAI+yUSDC+yUSDT+yTUSD', 'decimals': 18,},
-  '0xfBe122D0ba3c75e1F7C80bd27613c9f35B81FEeC': {'asset': 'fRenBTC', 'decimals': 8,},
-  '0xc07EB91961662D275E2D285BdC21885A4Db136B0': {'asset': 'fWBTC', 'decimals': 8,},
-  '0x192E9d29D43db385063799BC239E772c3b6888F3': {'asset': 'fCRVRenWBTC', 'decimals': 18,},
-  '0xb1FeB6ab4EF7d0f41363Da33868e85EB0f3A57EE': {'asset': 'fUNI-ETH-WBTC', 'decimals': 18,},
-  '0xB19EbFB37A936cCe783142955D39Ca70Aa29D43c': {'asset': 'fUNI-ETH-USDT', 'decimals': 18,},
-  '0x63671425ef4D25Ec2b12C7d05DE855C143f16e3B': {'asset': 'fUNI-ETH-USDC', 'decimals': 18,},
-  '0x1a9F22b4C385f78650E7874d64e442839Dc32327': {'asset': 'fUNI-ETH-DAI', 'decimals': 18,},
-  '0x8f5adC58b32D4e5Ca02EAC0E293D35855999436C': {'asset': 'FARM', 'decimals': 18,},
+  '0xfBe122D0ba3c75e1F7C80bd27613c9f35B81FEeC': {'asset': 'fRenBTC-v0', 'decimals': 8,},
+  '0xc07EB91961662D275E2D285BdC21885A4Db136B0': {'asset': 'fWBTC-v0', 'decimals': 8,},
+  '0x192E9d29D43db385063799BC239E772c3b6888F3': {'asset': 'fCRVRenWBTC-v0', 'decimals': 18,},
+  '0xb1FeB6ab4EF7d0f41363Da33868e85EB0f3A57EE': {'asset': 'fUNI-ETH-WBTC-v0', 'decimals': 18,},
+  '0xB19EbFB37A936cCe783142955D39Ca70Aa29D43c': {'asset': 'fUNI-ETH-USDT-v0', 'decimals': 18,},
+  '0x63671425ef4D25Ec2b12C7d05DE855C143f16e3B': {'asset': 'fUNI-ETH-USDC-v0', 'decimals': 18,},
+  '0x1a9F22b4C385f78650E7874d64e442839Dc32327': {'asset': 'fUNI-ETH-DAI-v0', 'decimals': 18,},
+  '0x01112a60f427205dcA6E229425306923c3Cc2073': {'asset': 'fUNI-ETH-WBTC', 'decimals': 18, 'type': 'timelock',},
+  '0x7DDc3ffF0612E75Ea5ddC0d6Bd4e268f70362Cff': {'asset': 'fUNI-ETH-USDT', 'decimals': 18, 'type': 'timelock',},
+  '0xA79a083FDD87F73c2f983c5551EC974685D6bb36': {'asset': 'fUNI-ETH-USDC', 'decimals': 18, 'type': 'timelock',},
+  '0x307E2752e8b8a9C29005001Be66B1c012CA9CDB7': {'asset': 'fUNI-ETH-DAI', 'decimals': 18, 'type': 'timelock',},
+  '0xF553E1f826f42716cDFe02bde5ee76b2a52fc7EB': {'asset': 'fSUSHI-WBTC-TBTC', 'decimals': 18, 'type': 'timelock',},
+  '0x7674622c63Bee7F46E86a4A5A18976693D54441b': {'asset': 'fTUSD', 'decimals': 18, 'type': 'timelock',},
+  '0xFE09e53A81Fe2808bc493ea64319109B5bAa573e': {'asset': 'fWETH', 'decimals': 18, 'type': 'timelock',},
+  '0xab7FA2B2985BCcfC13c6D86b1D5A17486ab1e04C': {'asset': 'fDAI', 'decimals': 18, 'type': 'timelock',},
+  '0xf0358e8c3CD5Fa238a29301d0bEa3D63A17bEdBE': {'asset': 'fUSDC', 'decimals': 6, 'type': 'timelock',},
+  '0x053c80eA73Dc6941F518a68E2FC52Ac45BDE7c9C': {'asset': 'fUSDT', 'decimals': 6, 'type': 'timelock',},
+  '0x5d9d25c7C457dD82fc8668FFC6B9746b674d4EcB': {'asset': 'fWBTC', 'decimals': 8, 'type': 'timelock',},
+  '0xC391d1b08c1403313B0c28D47202DFDA015633C4': {'asset': 'fRENBTC', 'decimals': 8, 'type': 'timelock',},
+  '0x9aA8F427A17d6B0d91B6262989EdC7D45d6aEdf8': {'asset': 'fCRVRENWBTC', 'decimals': 18, 'type': 'timelock',},
+  '0x71B9eC42bB3CB40F017D8AD8011BE8e384a95fa5': {'asset': 'f3CRV', 'decimals': 18, 'type': 'timelock',},
+  '0x0FE4283e0216F94f5f9750a7a11AC54D3c9C38F3': {'asset': 'fYCRV', 'decimals': 18, },
 }
 
-
 vault_addr = {
-    'fdai'        : {'addr': '0xab7FA2B2985BCcfC13c6D86b1D5A17486ab1e04C',},
-    'fusdc'       : {'addr': '0xf0358e8c3CD5Fa238a29301d0bEa3D63A17bEdBE',},
-    'fusdt'       : {'addr': '0x053c80eA73Dc6941F518a68E2FC52Ac45BDE7c9C',},
-    'fwbtc'       : {'addr': '0x5d9d25c7C457dD82fc8668FFC6B9746b674d4EcB',},
-    'frenbtc'     : {'addr': '0xC391d1b08c1403313B0c28D47202DFDA015633C4',},
-    'fcrvrenwbtc' : {'addr': '0x9aA8F427A17d6B0d91B6262989EdC7D45d6aEdf8', 'startblock': 10815917},
-    'fweth'       : {'addr': '0xFE09e53A81Fe2808bc493ea64319109B5bAa573e',},
-    'fycrv'       : {'addr': '0xF2B223Eb3d2B382Ead8D85f3c1b7eF87c1D35f3A',},
-    'ftusd'       : {'addr': '0x7674622c63Bee7F46E86a4A5A18976693D54441b',},
-    'funi-eth-wbtc': {'addr': '0x01112a60f427205dcA6E229425306923c3Cc2073',},
-    'funi-eth-usdt': {'addr': '0x7DDc3ffF0612E75Ea5ddC0d6Bd4e268f70362Cff',},
-    'funi-eth-usdc': {'addr': '0xA79a083FDD87F73c2f983c5551EC974685D6bb36',},
-    'funi-eth-dai':  {'addr': '0x307E2752e8b8a9C29005001Be66B1c012CA9CDB7',},
-    'fsushi-wbtc-tbtc': {'addr': '0xF553E1f826f42716cDFe02bde5ee76b2a52fc7EB',},
-    'profitshare': {'addr': '0x8f5adC58b32D4e5Ca02EAC0E293D35855999436C',},
+    'fdai'        : {'addr': '0xab7FA2B2985BCcfC13c6D86b1D5A17486ab1e04C',
+                     'pool': '0x15d3A64B2d5ab9E152F16593Cdebc4bB165B5B4A',
+                     },
+    'fusdc'       : {'addr': '0xf0358e8c3CD5Fa238a29301d0bEa3D63A17bEdBE',
+                     'pool': '0x4F7c28cCb0F1Dbd1388209C67eEc234273C878Bd',
+                     },
+    'fusdt'       : {'addr': '0x053c80eA73Dc6941F518a68E2FC52Ac45BDE7c9C',
+                     'pool': '0x6ac4a7AB91E6fD098E13B7d347c6d4d1494994a2',
+                     },
+    'fwbtc'       : {'addr': '0x5d9d25c7C457dD82fc8668FFC6B9746b674d4EcB',
+                     'pool': '0x917d6480Ec60cBddd6CbD0C8EA317Bcc709EA77B',
+                     },
+    'frenbtc'     : {'addr': '0xC391d1b08c1403313B0c28D47202DFDA015633C4',
+                     'pool': '0x7b8Ff8884590f44e10Ea8105730fe637Ce0cb4F6',
+                     },
+    'fcrvrenwbtc' : {'addr': '0x9aA8F427A17d6B0d91B6262989EdC7D45d6aEdf8', 'startblock': 10815917,
+                     'pool': '0xA3Cf8D1CEe996253FAD1F8e3d68BDCba7B3A3Db5',
+                     },
+    'fweth'       : {'addr': '0xFE09e53A81Fe2808bc493ea64319109B5bAa573e',
+                     'pool': '0x3DA9D911301f8144bdF5c3c67886e5373DCdff8e',
+                     },
+    'ftusd'       : {'addr': '0x7674622c63Bee7F46E86a4A5A18976693D54441b',
+                     'pool': '0xeC56a21CF0D7FeB93C25587C12bFfe094aa0eCdA',
+                     },
+    'funi-eth-wbtc': {'addr': '0x01112a60f427205dcA6E229425306923c3Cc2073',
+                     'pool': '0xF1181A71CC331958AE2cA2aAD0784Acfc436CB93',
+                     },
+    'funi-eth-usdt': {'addr': '0x7DDc3ffF0612E75Ea5ddC0d6Bd4e268f70362Cff',
+                     'pool': '0x75071F2653fBC902EBaff908d4c68712a5d1C960',
+                     },
+    'funi-eth-usdc': {'addr': '0xA79a083FDD87F73c2f983c5551EC974685D6bb36',
+                     'pool': '0x156733b89Ac5C704F3217FEe2949A9D4A73764b5',
+                     },
+    'funi-eth-dai':  {'addr': '0x307E2752e8b8a9C29005001Be66B1c012CA9CDB7',
+                     'pool': '0x7aeb36e22e60397098C2a5C51f0A5fB06e7b859c',
+                     },
+    'fsushi-wbtc-tbtc': {'addr': '0xF553E1f826f42716cDFe02bde5ee76b2a52fc7EB',
+                     'pool': '0x9523FdC055F503F73FF40D7F66850F409D80EF34',
+                     },
+    'fsushi-eth-dai': {
+        'addr': '0x203E97aa6eB65A1A02d9E80083414058303f241E',
+        'pool': '0x76Aef359a33C02338902aCA543f37de4b01BA1FA',
+        'underlying': '0xC3D03e4F041Fd4cD388c549Ee2A29a9E5075882f',
+        },
+    'fsushi-eth-usdt': {
+        'addr': '0x64035b583c8c694627A199243E863Bb33be60745',
+        'pool': '0xA56522BCA0A09f57B85C52c0Cc8Ba1B5eDbc64ef',
+        'underlying': '0x06da0fd433C1A5d7a4faa01111c044910A184553',
+        },
+    'fsushi-eth-usdc': {
+        'addr': '0x01bd09A1124960d9bE04b638b142Df9DF942b04a',
+        'pool': '0x6B4e1E0656Dd38F36c318b077134487B9b0cf7a6',
+        'underlying': '0x397FF1542f962076d0BFE58eA045FfA2d347ACa0',
+        },
+    'fsushi-eth-wbtc': {
+        'addr': '0x5C0A3F55AAC52AA320Ff5F280E77517cbAF85524',
+        'pool': '0xE2D9FAe95f1e68afca7907dFb36143781f917194',
+        'underlying': '0xCEfF51756c56CeFFCA006cD410B03FFC46dd3a58',
+        },
+    'profitshare': {'addr': '0x8f5adC58b32D4e5Ca02EAC0E293D35855999436C',
+                    'pool': '0x25550Cccbd68533Fa04bFD3e3AC4D09f9e00Fc50',
+                    },
+    'f3crv':       {'addr': '0x71B9eC42bB3CB40F017D8AD8011BE8e384a95fa5',
+                    'pool': '0x27F12d1a08454402175b9F0b53769783578Be7d9',
+                    },
+    'fycrv':       {'addr': '0x0FE4283e0216F94f5f9750a7a11AC54D3c9C38F3',
+                    'pool': '0x6D1b6Ea108AA03c6993d8010690264BA96D349A8',
+                    },
+    'fcrvtbtc':    {'addr': '0x640704D106E79e105FDA424f05467F005418F1B5',
+                    'pool': '0x017eC1772A45d2cf68c429A820eF374f0662C57c',
+                    },
+    'fcrvbusd':    {'addr': '0x4b1cBD6F6D8676AcE5E412C78B7a59b4A1bbb68a',
+                    'pool': '0x093C2ae5E6F3D2A897459aa24551289D462449AD',
+                    },
+    'fcrvusdn':    {'addr': '0x683E683fBE6Cf9b635539712c999f3B3EdCB8664',
+                    'pool': '0xef4Da1CE3f487DA2Ed0BE23173F76274E0D47579',
+                    },
+    'fcrvcomp':    {'addr': '0x998cEb152A42a3EaC1f555B1E911642BeBf00faD',
+                    'pool': '0xC0f51a979e762202e9BeF0f62b07F600d0697DE1',
+                    },
+    'uniswap': {'addr': '',
+                'pool': '',
+                },
 }
 
 earlyemissions = [
@@ -93,7 +178,7 @@ def emissions(weeknum):
 
 client = discord.Client(command_prefix='!')
 activity_start = discord.Streaming(
-                name='the prices',
+                name='node desynced',
                 url='https://uniswap.info/token/0xa0246c9032bc3a600820415ae600c6388619a14d'
 )
 
@@ -103,7 +188,7 @@ async def on_ready():
     await client.change_presence(activity=activity_start)
     update_price.start()
 
-@tasks.loop(seconds=15)
+@tasks.loop(seconds=180)
 async def update_price():
     print(f'fetching pool reserves...')
     poolvals = pool_contract.functions['getReserves']().call()
@@ -127,10 +212,16 @@ async def on_message(msg):
         if '!bot' in msg.content:
             embed = discord.Embed(
                     title='Autonomous Agricultural Assistant, at your service :tractor:',
-                    description=':bar_chart: `!trade`: FARM markets and trading\n'
+                    description=':arrows_counterclockwise: `!uniswap`: FARM:USDC Uniswap pool stats\n'
+                                ':farmer: `!profitshare`: FARM profit share pool stats\n'
+                                ':bar_chart: `!trade`: FARM markets and trading\n'
+                                ':teacher: `!apy {number}`: convert between APR and APY\n'
                                 ':thinking: `!payout`: information on farming rewards\n'
+                                ':bank: `!vault vaultname`: Harvest vault state of supported vaults\n'
+                                ':lock: `f{coin}`, `funi-eth-{coin}`, `fsushi-wbtc-tbtc`\n'
+                                ':rainbow: LP stables: `fycrv`, `f3crv`, `fcrvcomp`, `fcrvbusd`, `fcrvusdn`\n'
+                                ':rainbow: LP bitcoin: `fcrvrenwbtc`, `fcrvtbtc`\n'
                                 ':globe_with_meridians: `!contribute`: contribute to the community wiki\n'
-                                ':bank: `!vault fdai/fwbtc/etc`: Harvest vault state\n'
                                 ':chart_with_upwards_trend: improve me [on GitHub](https://github.com/brandoncurtis/harvest-discordbot)'
                     )
             await msg.channel.send(embed=embed)
@@ -290,6 +381,68 @@ async def on_message(msg):
                                 f':bar_chart: [FARM:USDC Uniswap chart](https://beta.dex.vision/?ticker=UniswapV2:FARMUSDC-0x514906FC121c7878424a5C928cad1852CC545892&interval=15)'
                     )
             await msg.channel.send(embed=embed)
+        if '!returns' in msg.content:
+            vault = msg.content.split(' ')[-2].lower()
+            bal = int(msg.content.split(' ')[-1])
+            delta_day, delta_week, delta_month = get_poolreturns(vault)
+            embed = discord.Embed(
+                    title=f':tractor: Historical FARM Returns',
+                    description=f'Rewards per `{bal:.2f}` {vault} per day: `{bal*delta_day:.4f}` FARM\n'
+                    f'Rewards per `{bal:.2f}` {vault} per week: `{bal*delta_week:.4f}` FARM'
+                    #f'Rewards per `{bal:.2f}` {vault} per month: `{bal*delta_month:.4f}` FARM'
+                    )
+            await msg.channel.send(embed=embed)
+
+def get_poolreturns(vault):
+    blocknum = w3.eth.blockNumber
+    if vault == 'profitshare':
+        ps_pool_addr = vault_addr['profitshare']['pool']
+        ps_contract = w3.eth.contract(address=ps_pool_addr, abi=PS_ABI)
+        ps_current = ps_contract.functions['balanceOf'](MODEL_ADDR).call()
+        try:
+            ps_day = ps_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCK_PER_DAY)
+            ps_delta_day = (ps_current - ps_day) / (ps_day)
+        except:
+            ps_delta_day = 0
+        try:
+            ps_week = ps_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCK_PER_DAY*7)
+            ps_delta_week = (ps_current - ps_week) / (ps_week)
+        except:
+            ps_delta_week = 0
+        try:
+            ps_month = ps_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCK_PER_DAY*30)
+            ps_delta_month = (ps_current - ps_month) / (ps_month)
+        except:
+            ps_delta_month = 0
+        return ps_delta_day, ps_delta_week, ps_delta_month
+    vault_address = vault_addr[vault]['addr']
+    vault_contract = w3.eth.contract(address=vault_address, abi=VAULT_ABI)
+    try:
+        vault_decimals = int(vault_contract.functions['decimals']().call())
+    except:
+        vault_decimals = 18
+    pool_addr = vault_addr[vault]['pool']
+    pool_contract = w3.eth.contract(address=pool_addr, abi=POOL_ABI)
+    reward_current = pool_contract.functions['earned'](MODEL_ADDR).call()
+    try:
+        reward_day = pool_contract.functions['earned'](MODEL_ADDR).call(block_identifier=blocknum-BLOCK_PER_DAY)
+        balance_day = pool_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCK_PER_DAY)
+        delta_day = ((10**-18) / (10**(-1*vault_decimals))) * (reward_current - reward_day) / balance_day
+    except:
+        delta_day = 0
+    try:
+        reward_week = pool_contract.functions['earned'](MODEL_ADDR).call(block_identifier=blocknum-BLOCK_PER_DAY*7)
+        balance_week = pool_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCK_PER_DAY)
+        delta_week = ((10**-18) / (10**(-1*vault_decimals))) * (reward_current - reward_week) / balance_week
+    except:
+        delta_week= 0
+    try:
+        reward_month = pool_contract.functions['earned'](MODEL_ADDR).call(block_identifier=blocknum-BLOCK_PER_DAY*30)
+        balance_month = pool_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCK_PER_DAY)
+        delta_month = ((10**-18) / (10**(-1*vault_decimals))) * (reward_current - reward_month) / balance_month
+    except:
+        delta_month= 0
+    return delta_day, delta_week, delta_month
 
 def get_uniswapstate():
     uni_addr = UNIPOOL_ADDR
@@ -333,7 +486,9 @@ def get_vaultstate(vault):
     return (vault_address, vault_shareprice, vault_total, vault_buffer, vault_target, vault_strat, vault_strat_future, vault_strat_future_time)
 
 def main():
+    print(f'starting discord bot...')
     client.run(DISCORD_BOT_TOKEN)
+    print(f'discord bot started')
 
 if __name__ == '__main__':
     main()
