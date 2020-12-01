@@ -383,7 +383,7 @@ async def on_message(msg):
             await msg.channel.send(embed=embed)
         if '!returns' in msg.content:
             vault = msg.content.split(' ')[-2].lower()
-            bal = int(msg.content.split(' ')[-1])
+            bal = float(msg.content.split(' ')[-1])
             delta_day, delta_week, delta_month = get_poolreturns(vault)
             monthmsg = ''
             if delta_month > 0:
