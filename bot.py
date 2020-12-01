@@ -147,8 +147,8 @@ vault_addr = {
     'fcrvcomp':    {'addr': '0x998cEb152A42a3EaC1f555B1E911642BeBf00faD',
                     'pool': '0xC0f51a979e762202e9BeF0f62b07F600d0697DE1',
                     },
-    'uniswap': {'addr': '',
-                'pool': '',
+    'uniswap': {'addr': '0x514906FC121c7878424a5C928cad1852CC545892',
+                'pool': '0x99b0d6641A63Ce173E6EB063b3d3AED9A35Cf9bf',
                 },
 }
 
