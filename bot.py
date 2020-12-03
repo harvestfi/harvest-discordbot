@@ -103,6 +103,9 @@ vault_addr = {
     'funi-eth:dai':  {'addr': '0x307E2752e8b8a9C29005001Be66B1c012CA9CDB7',
                      'pool': '0x7aeb36e22e60397098C2a5C51f0A5fB06e7b859c',
                      },
+    'funi-eth:dpi':  {'addr': '0x2a32dcBB121D48C106F6d94cf2B4714c0b4Dfe48',
+                     'pool': '0xAd91695b4BeC2798829ac7a4797E226C78f22Abd',
+                     },
     'fsushi-wbtc:tbtc': {'addr': '0xF553E1f826f42716cDFe02bde5ee76b2a52fc7EB',
                      'pool': '0x9523FdC055F503F73FF40D7F66850F409D80EF34',
                      },
@@ -159,6 +162,8 @@ earlyemissions = [
     24977.50
 ]
 
+update_index = 0
+
 def emissions(weeknum):
     weeknum = int(weeknum)
     emitted_this_week = 0
@@ -190,10 +195,20 @@ async def on_ready():
 
 @tasks.loop(seconds=180)
 async def update_price():
+    global update_index
+    asset = list(ASSETS.keys())[update_index % 2]
+
+
+
+
     print(f'fetching pool reserves...')
     poolvals = pool_contract.functions['getReserves']().call()
     print(f'calculating price...')
     price = controller_contract.functions['quote'](ONE_18DEC, poolvals[0], poolvals[1]).call()*10**-6
+
+    ps_address = vault_addr['profitshare']['addr']
+    ps_deposits, ps_rewardperday, ps_rewardfinish, ps_stake_frac = get_profitsharestate()
+    ps_apr = 100* (ps_rewardperday / ps_deposits) * 365
     
     print(f'updating the price...')
     msg = f'${price:0.2f} FARM'
@@ -203,6 +218,7 @@ async def update_price():
     )
     print(msg)
     await client.change_presence(activity=new_price)
+    update_index += 1
 
 @client.event
 async def on_message(msg):
