@@ -129,13 +129,13 @@ vault_addr = {
         'pool': '0xE2D9FAe95f1e68afca7907dFb36143781f917194',
         'underlying': '0xCEfF51756c56CeFFCA006cD410B03FFC46dd3a58',
         },
-    'profitshare': {'addr': '0x8f5adC58b32D4e5Ca02EAC0E293D35855999436C',
+    'profitshare':  {'addr': '0x8f5adC58b32D4e5Ca02EAC0E293D35855999436C',
                     'pool': '0x25550Cccbd68533Fa04bFD3e3AC4D09f9e00Fc50',
                     },
-    'fcrv-3pool':       {'addr': '0x71B9eC42bB3CB40F017D8AD8011BE8e384a95fa5',
+    'fcrv-3pool':   {'addr': '0x71B9eC42bB3CB40F017D8AD8011BE8e384a95fa5',
                     'pool': '0x27F12d1a08454402175b9F0b53769783578Be7d9',
                     },
-    'fcrv-ypool':       {'addr': '0x0FE4283e0216F94f5f9750a7a11AC54D3c9C38F3',
+    'fcrv-ypool':   {'addr': '0x0FE4283e0216F94f5f9750a7a11AC54D3c9C38F3',
                     'pool': '0x6D1b6Ea108AA03c6993d8010690264BA96D349A8',
                     },
     'fcrv-tbtc':    {'addr': '0x640704D106E79e105FDA424f05467F005418F1B5',
@@ -149,6 +149,12 @@ vault_addr = {
                     },
     'fcrv-comp':    {'addr': '0x998cEb152A42a3EaC1f555B1E911642BeBf00faD',
                     'pool': '0xC0f51a979e762202e9BeF0f62b07F600d0697DE1',
+                    },
+    'fcrv-husd':    {'addr': '0x29780C39164Ebbd62e9DDDE50c151810070140f2',
+                    'pool': '0x72C50e6FD8cC5506E166c273b6E814342Aa0a3c1',
+                    },
+    'fcrv-hbtc':    {'addr': '0xCC775989e76ab386E9253df5B0c0b473E22102E2',
+                    'pool': '0x01f9CAaD0f9255b0C0Aa2fBD1c1aA06ad8Af7254',
                     },
     'uniswap': {'addr': '0x514906FC121c7878424a5C928cad1852CC545892',
                 'pool': '0x99b0d6641A63Ce173E6EB063b3d3AED9A35Cf9bf',
@@ -346,30 +352,39 @@ async def on_message(msg):
             await msg.channel.send(embed=embed)
         if '!vault' in msg.content:
             vault = msg.content.split(' ')[-1].lower()
-            underlying = vault[1:]
-            address, shareprice, vault_total, vault_buffer, vault_target, vault_strat, vault_strat_future, vault_strat_future_time = get_vaultstate(vault)
-            vault_invested = vault_total - vault_buffer
-            embed = discord.Embed(
-                    title=f'{vault} Vault State :bank::mag:',
-                    description=f':map: {vault} address: [{address}](https://etherscan.io/address/{address})\n'
+            try:
+                underlying = vault[1:]
+                address, shareprice, vault_total, vault_buffer, vault_target, vault_strat, vault_strat_future, vault_strat_future_time = get_vaultstate(vault)
+                vault_invested = vault_total - vault_buffer
+                embed = discord.Embed(
+                        title=f'{vault} Vault State :bank::mag:',
+                        description=f':map: {vault} address: [{address}](https://etherscan.io/address/{address})\n'
                                 f':moneybag: {vault} share price = {shareprice} {underlying}\n'
                                 f':sponge: {underlying} withdrawal buffer = {vault_buffer:,.4f} {underlying}\n'
                                 f':bar_chart: {underlying} invested = {vault_invested:,.4f} '
                                 f'{underlying} ({100*vault_invested/vault_total:0.2f}%, target {100*vault_target:0.2f}%)\n'
                                 f':compass: vault strategy: [{vault_strat}](https://etherscan.io/address/{vault_strat})\n'
-                    )
-            if vault_strat_future_time != 0:
-                vault_update_dt = datetime.datetime.fromtimestamp(vault_strat_future_time)
-                embed.description += f':rocket: future strategy: [{vault_strat_future}](https://etherscan.io/address/{vault_strat_future})\n'
-                vault_update_timeleft = ( vault_update_dt - datetime.datetime.now() )
-                if vault_update_timeleft.total_seconds() < 0:
-                    embed.description += f':alarm_clock: future strategy can be activated at any time; [subscribe to updates on Twitter](https://twitter.com/farmer_fud)'
+                        )
+                if vault_strat_future_time != 0:
+                    vault_update_dt = datetime.datetime.fromtimestamp(vault_strat_future_time)
+                    embed.description += f':rocket: future strategy: [{vault_strat_future}](https://etherscan.io/address/{vault_strat_future})\n'
+                    vault_update_timeleft = ( vault_update_dt - datetime.datetime.now() )
+                    if vault_update_timeleft.total_seconds() < 0:
+                        embed.description += f':alarm_clock: future strategy can be activated at any time; [subscribe to updates on Twitter](https://twitter.com/farmer_fud)'
+                    else:
+                        embed.description += f':alarm_clock: future strategy can be activated at {vault_update_dt} GMT '
+                        embed.description += f'({vault_update_timeleft.total_seconds()/3600:.1f} hours); [subscribe to updates on Twitter](https://twitter.com/farmer_fud)'
                 else:
-                    embed.description += f':alarm_clock: future strategy can be activated at {vault_update_dt} GMT '
-                    embed.description += f'({vault_update_timeleft.total_seconds()/3600:.1f} hours); [subscribe to updates on Twitter](https://twitter.com/farmer_fud)'
-            else:
-                embed.description += f':alarm_clock: no strategy updates are pending; [subscribe to updates on Twitter](https://twitter.com/farmer_fud)'
-            await msg.channel.send(embed=embed)
+                    embed.description += f':alarm_clock: no strategy updates are pending; [subscribe to updates on Twitter](https://twitter.com/farmer_fud)'
+                await msg.channel.send(embed=embed)
+           except:
+                 embed = discord.Embed(
+                        title=f'{vault} Vault State :bank::mag:',
+                        description=f':bank: `!vault vaultname`: Harvest vault state of supported vaults\n'
+                                f':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
+                                f':rainbow: LP stables: `fcrv-ypool`, `fcrv-3pool`, `fcrv-comp`, `fcrv-busd`, `fcrv-husd`, `fcrv-usdn`\n'
+                                f':rainbow: LP bitcoin: `fcrv-renwbtc`, `fcrv-tbtc`, `fcrv-hbtc`\n'
+                await msg.channel.send(embed=embed)
         if '!profitshare' in msg.content:
             ps_address = vault_addr['profitshare']['addr']
             ps_deposits, ps_rewardperday, ps_rewardfinish, ps_stake_frac = get_profitsharestate()
