@@ -377,13 +377,13 @@ async def on_message(msg):
                 else:
                     embed.description += f':alarm_clock: no strategy updates are pending; [subscribe to updates on Twitter](https://twitter.com/farmer_fud)'
                 await msg.channel.send(embed=embed)
-           except:
-                 embed = discord.Embed(
+            except:
+                embed = discord.Embed(
                         title=f'{vault} Vault State :bank::mag:',
                         description=f':bank: `!vault vaultname`: Harvest vault state of supported vaults\n'
                                 f':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
                                 f':rainbow: LP stables: `fcrv-ypool`, `fcrv-3pool`, `fcrv-comp`, `fcrv-busd`, `fcrv-husd`, `fcrv-usdn`\n'
-                                f':rainbow: LP bitcoin: `fcrv-renwbtc`, `fcrv-tbtc`, `fcrv-hbtc`\n'
+                                f':rainbow: LP bitcoin: `fcrv-renwbtc`, `fcrv-tbtc`, `fcrv-hbtc`'
                 await msg.channel.send(embed=embed)
         if '!profitshare' in msg.content:
             ps_address = vault_addr['profitshare']['addr']
@@ -413,19 +413,28 @@ async def on_message(msg):
                     )
             await msg.channel.send(embed=embed)
         if '!returns' in msg.content:
-            vault = msg.content.split(' ')[-2].lower()
-            bal = float(msg.content.split(' ')[-1])
-            delta_day, delta_week, delta_month = get_poolreturns(vault)
-            monthmsg = ''
-            if delta_month > 0:
-                monthmsg = f'\nRewards per `{bal:.2f}` {vault} per month: `{bal*delta_month:.4f}` FARM'
-            embed = discord.Embed(
-                    title=f':tractor: Historical FARM Returns',
-                    description=f'Rewards per `{bal:.2f}` {vault} per day: `{bal*delta_day:.4f}` FARM\n'
-                    f'Rewards per `{bal:.2f}` {vault} per week: `{bal*delta_week:.4f}` FARM'
-                    + monthmsg
-                    )
-            await msg.channel.send(embed=embed)
+            try:
+                vault = msg.content.split(' ')[-2].lower()
+                bal = float(msg.content.split(' ')[-1])
+                delta_day, delta_week, delta_month = get_poolreturns(vault)
+                monthmsg = ''
+                if delta_month > 0:
+                    monthmsg = f'\nRewards per `{bal:.2f}` {vault} per month: `{bal*delta_month:.4f}` FARM'
+                embed = discord.Embed(
+                        title=f':tractor: Historical FARM Returns',
+                        description=f'Rewards per `{bal:.2f}` {vault} per day: `{bal*delta_day:.4f}` FARM\n'
+                        f'Rewards per `{bal:.2f}` {vault} per week: `{bal*delta_week:.4f}` FARM'
+                        + monthmsg
+                        )
+                await msg.channel.send(embed=embed)
+            except:
+                embed = discord.Embed(
+                        title=f':tractor: Historical FARM Returns',
+                        description=f':bank: `!returns vaultname`: historical rewards to supported vaults\n'
+                                f':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
+                                f':rainbow: LP stables: `fcrv-ypool`, `fcrv-3pool`, `fcrv-comp`, `fcrv-busd`, `fcrv-husd`, `fcrv-usdn`\n'
+                                f':rainbow: LP bitcoin: `fcrv-renwbtc`, `fcrv-tbtc`, `fcrv-hbtc`'
+                await msg.channel.send(embed=embed)
 
 def get_poolreturns(vault):
     blocknum = w3.eth.blockNumber
