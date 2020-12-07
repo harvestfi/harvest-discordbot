@@ -25,6 +25,7 @@ UNIPOOL_ABI = os.getenv("UNIPOOL_ABI")
 VAULT_ABI = os.getenv("VAULT_ABI")
 PS_ABI = os.getenv("PS_ABI")
 POOL_ABI = os.getenv("POOL_ABI")
+TOKEN_ABI = os.getenv("TOKEN_ABI")
 FARM_ADDR = '0xa0246c9032bC3A600820415aE600c6388619A14D'
 MODEL_ADDR = '0x814055779F8d2F591277b76C724b7AdC74fb82D9'
 
@@ -35,6 +36,44 @@ BLOCK_PER_DAY = int((60/13.2)*60*24) #~7200 at 12 sec
 w3 = Web3(Web3.HTTPProvider(NODE_URL))
 controller_contract = w3.eth.contract(address=UNIROUTER_ADDR, abi=UNIROUTER_ABI)
 pool_contract = w3.eth.contract(address=UNIPOOL_ADDR, abi=UNIPOOL_ABI)
+
+ASSETS = {
+    'FARM': {
+        'addr':'0xa0246c9032bC3A600820415aE600c6388619A14D',
+        'main_quotetoken':'USDC',
+        'pools': {
+            'USDC': {
+                'router':UNIROUTER_ADDR,
+                'addr':'0x514906FC121c7878424a5C928cad1852CC545892',
+                'basetoken_index': 0,
+                'quotetoken_index': 1,
+                'rewards':'0x514906fc121c7878424a5c928cad1852cc545892',
+                'oracles': [],
+                #'oracles': [
+                #    {'addr':'0xBb2b8038a1640196FbE3e38816F3e67Cba72D940','basetoken_index':0,'quotetoken_index':1,},
+                #    {'addr':'0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc','basetoken_index':1,'quotetoken_index':0,},
+                #    ],
+                },
+            },
+        },
+    'GRAIN': {
+        'addr':'0x6589fe1271A0F29346796C6bAf0cdF619e25e58e',
+        'main_quotetoken':'FARM',
+        'pools': {
+            'FARM': {
+                'router':UNIROUTER_ADDR,
+                'addr':'0xB9Fa44B0911F6D777faAb2Fa9d8Ef103f25Ddf49',
+                'basetoken_index': 0,
+                'quotetoken_index': 1,
+                'rewards':'',
+                'oracles': [
+                    {'addr':'0x514906FC121c7878424a5C928cad1852CC545892','basetoken_index':0,'quotetoken_index':1,},
+                    ],
+                },
+            },
+        },
+
+}
 
 vaults = {
   '0x8e298734681adbfC41ee5d17FF8B0d6d803e7098': {'asset': 'fWETH-v0', 'decimals': 18,},
@@ -199,32 +238,61 @@ async def on_ready():
     await client.change_presence(activity=activity_start)
     update_price.start()
 
-@tasks.loop(seconds=180)
-async def update_price():
-    global update_index
-    asset = list(ASSETS.keys())[update_index % 2]
-
-
-
-
-    print(f'fetching pool reserves...')
-    poolvals = pool_contract.functions['getReserves']().call()
-    print(f'calculating price...')
-    price = controller_contract.functions['quote'](ONE_18DEC, poolvals[0], poolvals[1]).call()*10**-6
-
-    ps_address = vault_addr['profitshare']['addr']
-    ps_deposits, ps_rewardperday, ps_rewardfinish, ps_stake_frac = get_profitsharestate()
-    ps_apr = 100* (ps_rewardperday / ps_deposits) * 365
-    
-    print(f'updating the price...')
-    msg = f'${price:0.2f} FARM'
-    new_price = discord.Streaming(
-        name=msg,
-        url='https://uniswap.info/token/0xa0246c9032bc3a600820415ae600c6388619a14d'
-    )
-    print(msg)
+@tasks.loop(seconds=30)
+async def update_price():                                                                                                                                                                                          
+    global update_index                                                                                                                                                                                            
+    asset_list = list(ASSETS.keys())                                                                                                                                                                               
+    basetoken_name = asset_list[update_index % len(asset_list)]                                                                                                                                                    
+    basetoken = ASSETS[basetoken_name]                                                                                                                                                                             
+    basetoken_addr = basetoken['addr']                                                                                                                                                                             
+    basetoken_contract = w3.eth.contract(address=basetoken_addr, abi=TOKEN_ABI)                                                                                                                                    
+    quotetoken_name = basetoken['main_quotetoken']                                                                                                                                                                 
+    pool = basetoken['pools'][quotetoken_name]                                                                                                                                                                     
+    pool_contract = w3.eth.contract(address=pool['addr'], abi=UNIPOOL_ABI)                                                                                                                                         
+    basetoken_index = pool['basetoken_index']                                                                                                                                                                     
+    quotetoken_index = pool['quotetoken_index']
+    quotetoken_addr = pool_contract.functions[f'token{quotetoken_index}']().call()                                                                                                                                 
+    quotetoken_contract = w3.eth.contract(address=quotetoken_addr, abi=TOKEN_ABI)                                                                                                                                  
+    router_contract = w3.eth.contract(address=pool['router'], abi=UNIROUTER_ABI)                                                                                                                                   
+                                                                                                                                                                                                                   
+    # fetch pool state                                                                                                                                                                                             
+    print(f'fetching pool reserves for {basetoken_name} ({basetoken_addr}) and {quotetoken_name} ({quotetoken_addr})...')                                                                                          
+    poolvals = pool_contract.functions['getReserves']().call()                                                                                                                                                     
+                                                                                                                                                                                                                   
+    # calculate price                                                                                                                                                                                              
+    print(f'calculating price...')                                                                                                                                                                                 
+    atoms_per_basetoken = 10**basetoken_contract.functions['decimals']().call()                                                                                                                                    
+    atoms_per_quotetoken = 10**quotetoken_contract.functions['decimals']().call()                                                                                                                                  
+    print(f'atoms per basetoken {basetoken_name}: {atoms_per_basetoken}; atoms per quotetoken {quotetoken_name}: {atoms_per_quotetoken}')
+    token_price = router_contract.functions['quote'](atoms_per_basetoken, poolvals[basetoken_index], poolvals[quotetoken_index]).call() / atoms_per_quotetoken                                                     
+    print(f'base pool price: {token_price}')                                                                                                                                                                       
+    oracle_price = 1                                                                                                                                                                                               
+    for oracle in pool['oracles']:                                                                                                                                                                                 
+        oracle_contract = w3.eth.contract(address=oracle['addr'], abi=UNIPOOL_ABI)                                                                                                                                 
+        oracle_reserves = oracle_contract.functions['getReserves']().call()                                                                                                                                        
+        oracle_basetoken = f'token{oracle["basetoken_index"]}'                                                                                                                                                     
+        oracle_quotetoken = f'token{oracle["quotetoken_index"]}'                                                                                                                                                   
+        atoms_per_oracle_basetoken = 10**w3.eth.contract(address=oracle_contract.functions[oracle_basetoken]().call(), abi=TOKEN_ABI).functions['decimals']().call()                                               
+        atoms_per_oracle_quotetoken = 10**w3.eth.contract(address=oracle_contract.functions[oracle_quotetoken]().call(), abi=TOKEN_ABI).functions['decimals']().call()                                             
+        oraclevals = oracle_contract.functions['getReserves']().call()                                                                                                                                             
+        oracle_price_step = router_contract.functions['quote'](atoms_per_oracle_basetoken, oraclevals[oracle['basetoken_index']], oraclevals[oracle['quotetoken_index']]).call()  / atoms_per_oracle_quotetoken    
+        oracle_price = oracle_price * oracle_price_step                                                                                                                                                            
+    print(f'oracle price: {oracle_price}')                                                                                                                                                                         
+    price = token_price * oracle_price                                                                                                                                                                             
+                                                                                                                                                                                                                   
+    # update price                                                                                                                                                                                                 
+    print(f'updating the price...')                                                                                                                                                                                
+    msg = f'${price:0.2f} {basetoken_name}'                                                                                                                                                                        
+    new_price = discord.Streaming(name=msg,url=f'https://etherscan.io/token/basetoken["addr"]')                                                                                                                    
+    print(msg)                                                                                                                                                                                                     
     await client.change_presence(activity=new_price)
     update_index += 1
+
+
+
+
+
+
 
 @client.event
 async def on_message(msg):
@@ -241,8 +309,10 @@ async def on_message(msg):
                                 ':thinking: `!payout`: information on farming rewards\n'
                                 ':bank: `!vault vaultname`: Harvest vault state of supported vaults\n'
                                 ':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
-                                ':rainbow: LP stables: `fcrv-ypool`, `fcrv-3pool`, `fcrv-comp`, `fcrv-busd`, `fcrv-usdn`\n'
-                                ':rainbow: LP bitcoin: `fcrv-renwbtc`, `fcrv-tbtc`\n'
+                                ':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
+                                ':dollar: LP $USD: `fcrv-ypool`, `fcrv-3pool`, `fcrv-comp`\n'
+                                ':dollar: LP $USD: `fcrv-husd`, `fcrv-busd`, `fcrv-usdn`\n'
+                                ':mountain: LP $BTC: `fcrv-renwbtc`, `fcrv-tbtc`\n'
                                 ':globe_with_meridians: `!contribute`: contribute to the community wiki\n'
                                 ':chart_with_upwards_trend: improve me [on GitHub](https://github.com/brandoncurtis/harvest-discordbot)'
                     )
@@ -381,9 +451,11 @@ async def on_message(msg):
                 embed = discord.Embed(
                         title=f'{vault} Vault State :bank::mag:',
                         description=f':bank: `!vault vaultname`: Harvest vault state of supported vaults\n'
-                                f':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
-                                f':rainbow: LP stables: `fcrv-ypool`, `fcrv-3pool`, `fcrv-comp`, `fcrv-busd`, `fcrv-husd`, `fcrv-usdn`\n'
-                                f':rainbow: LP bitcoin: `fcrv-renwbtc`, `fcrv-tbtc`, `fcrv-hbtc`'
+                                ':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
+                                ':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
+                                ':dollar: LP $USD: `fcrv-ypool`, `fcrv-3pool`, `fcrv-comp`\n'
+                                ':dollar: LP $USD: `fcrv-husd`, `fcrv-busd`, `fcrv-usdn`'
+                                )
                 await msg.channel.send(embed=embed)
         if '!profitshare' in msg.content:
             ps_address = vault_addr['profitshare']['addr']
@@ -431,9 +503,11 @@ async def on_message(msg):
                 embed = discord.Embed(
                         title=f':tractor: Historical FARM Returns',
                         description=f':bank: `!returns vaultname`: historical rewards to supported vaults\n'
-                                f':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
-                                f':rainbow: LP stables: `fcrv-ypool`, `fcrv-3pool`, `fcrv-comp`, `fcrv-busd`, `fcrv-husd`, `fcrv-usdn`\n'
-                                f':rainbow: LP bitcoin: `fcrv-renwbtc`, `fcrv-tbtc`, `fcrv-hbtc`'
+                                ':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
+                                ':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
+                                ':dollar: LP $USD: `fcrv-ypool`, `fcrv-3pool`, `fcrv-comp`\n'
+                                ':dollar: LP $USD: `fcrv-husd`, `fcrv-busd`, `fcrv-usdn`'
+                                )
                 await msg.channel.send(embed=embed)
 
 def get_poolreturns(vault):
