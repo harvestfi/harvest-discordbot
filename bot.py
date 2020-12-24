@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import math
 import requests
 import datetime
 import time
@@ -281,8 +282,9 @@ async def update_price():
     price = token_price * oracle_price                                                                                                                                                                             
 
     # update price
+    price_decimals = max(-1 * math.floor(math.log10(price)) + 1, 2)
     print(f'updating the price...')
-    msg = f'${price:0.2f} {basetoken_name}'
+    msg = f'${price:.{price_decimals}f} {basetoken_name}'
     # twap hack
     if (update_index % 3 == 0):
         msg = f'${get_twap():0.2f} TWAP'
