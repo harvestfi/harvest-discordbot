@@ -31,7 +31,7 @@ MODEL_ADDR = '0x814055779F8d2F591277b76C724b7AdC74fb82D9'
 
 ONE_18DEC = 1000000000000000000
 ZERO_ADDR = '0x0000000000000000000000000000000000000000'
-BLOCK_PER_DAY = int((60/13.2)*60*24) #~7200 at 12 sec
+BLOCKS_PER_DAY = int((60/13.2)*60*24) #~7200 at 12 sec
 
 w3 = Web3(Web3.HTTPProvider(NODE_URL))
 controller_contract = w3.eth.contract(address=UNIROUTER_ADDR, abi=UNIROUTER_ABI)
@@ -238,7 +238,7 @@ async def on_ready():
     await client.change_presence(activity=activity_start)
     update_price.start()
 
-@tasks.loop(seconds=30)
+@tasks.loop(seconds=15)
 async def update_price():                                                                                                                                                                                          
     global update_index                                                                                                                                                                                            
     asset_list = list(ASSETS.keys())                                                                                                                                                                               
@@ -279,12 +279,16 @@ async def update_price():
         oracle_price = oracle_price * oracle_price_step                                                                                                                                                            
     print(f'oracle price: {oracle_price}')                                                                                                                                                                         
     price = token_price * oracle_price                                                                                                                                                                             
-                                                                                                                                                                                                                   
-    # update price                                                                                                                                                                                                 
-    print(f'updating the price...')                                                                                                                                                                                
-    msg = f'${price:0.2f} {basetoken_name}'                                                                                                                                                                        
-    new_price = discord.Streaming(name=msg,url=f'https://etherscan.io/token/basetoken["addr"]')                                                                                                                    
-    print(msg)                                                                                                                                                                                                     
+
+    # update price
+    print(f'updating the price...')
+    msg = f'${price:0.2f} {basetoken_name}'
+    # twap hack
+    if (update_index % 3 == 0):
+        msg = f'${get_twap():0.2f} TWAP'
+
+    new_price = discord.Streaming(name=msg,url=f'https://etherscan.io/token/basetoken["addr"]')
+    print(msg)
     await client.change_presence(activity=new_price)
     update_index += 1
 
@@ -510,6 +514,21 @@ async def on_message(msg):
                                 )
                 await msg.channel.send(embed=embed)
 
+def get_twap():
+    #BLOCKS_PER_DAY = int((60/12)*60*24) # 7200 at 12 sec; 
+    # calculate the twap
+    pool_contract = w3.eth.contract(address=ASSETS['FARM']['pools']['USDC']['addr'], abi=UNIPOOL_ABI)
+    blocknum_t0 = w3.eth.blockNumber - BLOCKS_PER_DAY
+    time_t1  = pool_contract.functions['getReserves']().call()[-1]
+    time_t0 = pool_contract.functions['getReserves']().call(block_identifier = blocknum_t0)[-1]
+    price_t1 = pool_contract.functions['price0CumulativeLast']().call()
+    price_t0 = pool_contract.functions['price0CumulativeLast']().call(block_identifier = blocknum_t0)
+    elapsed_seconds = time_t1 - time_t0
+    twap = ( int( (10 ** 24) * (price_t1 - price_t0) / elapsed_seconds) >> 112 ) * (10 ** -12)
+    print(f'TWAP since last checkpoint is: ${twap:0.4f}') 
+    return twap
+
+
 def get_poolreturns(vault):
     blocknum = w3.eth.blockNumber
     if vault == 'profitshare':
@@ -517,17 +536,17 @@ def get_poolreturns(vault):
         ps_contract = w3.eth.contract(address=ps_pool_addr, abi=PS_ABI)
         ps_current = ps_contract.functions['balanceOf'](MODEL_ADDR).call()
         try:
-            ps_day = ps_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCK_PER_DAY)
+            ps_day = ps_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCKS_PER_DAY)
             ps_delta_day = (ps_current - ps_day) / (ps_day)
         except:
             ps_delta_day = 0
         try:
-            ps_week = ps_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCK_PER_DAY*7)
+            ps_week = ps_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCKS_PER_DAY*7)
             ps_delta_week = (ps_current - ps_week) / (ps_week)
         except:
             ps_delta_week = 0
         try:
-            ps_month = ps_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCK_PER_DAY*30)
+            ps_month = ps_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCKS_PER_DAY*30)
             ps_delta_month = (ps_current - ps_month) / (ps_month)
         except:
             ps_delta_month = 0
@@ -542,20 +561,20 @@ def get_poolreturns(vault):
     pool_contract = w3.eth.contract(address=pool_addr, abi=POOL_ABI)
     reward_current = pool_contract.functions['earned'](MODEL_ADDR).call()
     try:
-        reward_day = pool_contract.functions['earned'](MODEL_ADDR).call(block_identifier=blocknum-BLOCK_PER_DAY)
-        balance_day = pool_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCK_PER_DAY)
+        reward_day = pool_contract.functions['earned'](MODEL_ADDR).call(block_identifier=blocknum-BLOCKS_PER_DAY)
+        balance_day = pool_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCKS_PER_DAY)
         delta_day = ((10**-18) / (10**(-1*vault_decimals))) * (reward_current - reward_day) / balance_day
     except:
         delta_day = 0
     try:
-        reward_week = pool_contract.functions['earned'](MODEL_ADDR).call(block_identifier=blocknum-BLOCK_PER_DAY*7)
-        balance_week = pool_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCK_PER_DAY)
+        reward_week = pool_contract.functions['earned'](MODEL_ADDR).call(block_identifier=blocknum-BLOCKS_PER_DAY*7)
+        balance_week = pool_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCKS_PER_DAY)
         delta_week = ((10**-18) / (10**(-1*vault_decimals))) * (reward_current - reward_week) / balance_week
     except:
         delta_week= 0
     try:
-        reward_month = pool_contract.functions['earned'](MODEL_ADDR).call(block_identifier=blocknum-BLOCK_PER_DAY*30)
-        balance_month = pool_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCK_PER_DAY)
+        reward_month = pool_contract.functions['earned'](MODEL_ADDR).call(block_identifier=blocknum-BLOCKS_PER_DAY*30)
+        balance_month = pool_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCKS_PER_DAY)
         delta_month = ((10**-18) / (10**(-1*vault_decimals))) * (reward_current - reward_month) / balance_month
     except:
         delta_month= 0
