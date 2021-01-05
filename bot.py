@@ -18,7 +18,6 @@ load_dotenv(override=True)
 DISCORD_WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 NODE_URL = os.getenv("NODE_URL")
-START_BLOCK = os.getenv("START_BLOCK")
 UNIROUTER_ADDR = os.getenv("UNIROUTER_ADDR")
 UNIROUTER_ABI = os.getenv("UNIROUTER_ABI")
 UNIPOOL_ADDR= os.getenv("UNIPOOL_ADDR")
@@ -287,7 +286,7 @@ async def update_price():
     msg = f'${price:.{price_decimals}f} {basetoken_name}'
     # twap hack
     if (update_index % 3 == 0):
-        msg = f'${get_twap():0.2f} TWAP'
+        msg = f'${get_twap():0.2f} FARM TWAP'
 
     new_price = discord.Streaming(name=msg,url=f'https://etherscan.io/token/basetoken["addr"]')
     print(msg)
