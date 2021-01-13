@@ -20,7 +20,6 @@ DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 NODE_URL = os.getenv("NODE_URL")
 UNIROUTER_ADDR = os.getenv("UNIROUTER_ADDR")
 UNIROUTER_ABI = os.getenv("UNIROUTER_ABI")
-UNIPOOL_ADDR= os.getenv("UNIPOOL_ADDR")
 UNIPOOL_ABI = os.getenv("UNIPOOL_ABI")
 VAULT_ABI = os.getenv("VAULT_ABI")
 PS_ABI = os.getenv("PS_ABI")
@@ -35,7 +34,6 @@ BLOCKS_PER_DAY = int((60/13.2)*60*24) #~7200 at 12 sec
 
 w3 = Web3(Web3.HTTPProvider(NODE_URL))
 controller_contract = w3.eth.contract(address=UNIROUTER_ADDR, abi=UNIROUTER_ABI)
-pool_contract = w3.eth.contract(address=UNIPOOL_ADDR, abi=UNIPOOL_ABI)
 
 ASSETS = {
     'FARM': {
@@ -47,14 +45,26 @@ ASSETS = {
                 'addr':'0x514906FC121c7878424a5C928cad1852CC545892',
                 'basetoken_index': 0,
                 'quotetoken_index': 1,
-                'rewards':'0x514906fc121c7878424a5c928cad1852cc545892',
+                'rewards':'0x99b0d6641A63Ce173E6EB063b3d3AED9A35Cf9bf',
                 'oracles': [],
                 #'oracles': [
                 #    {'addr':'0xBb2b8038a1640196FbE3e38816F3e67Cba72D940','basetoken_index':0,'quotetoken_index':1,},
                 #    {'addr':'0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc','basetoken_index':1,'quotetoken_index':0,},
                 #    ],
                 },
+        'ETH': {
+                'router':UNIROUTER_ADDR,
+                'addr':'0x56feAccb7f750B997B36A68625C7C596F0B41A58',
+                'basetoken_index': 0,
+                'quotetoken_index': 1,
+                'rewards':'0x6555c79a8829b793F332f1535B0eFB1fE4C11958',
+                'oracles': [
+                #    {'addr':'0xBb2b8038a1640196FbE3e38816F3e67Cba72D940','basetoken_index':0,'quotetoken_index':1,},
+                    {'addr':'0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc','basetoken_index':1,'quotetoken_index':0,},
+                    ],
+                },
             },
+
         },
     'GRAIN': {
         'addr':'0x6589fe1271A0F29346796C6bAf0cdF619e25e58e',
@@ -342,7 +352,7 @@ async def on_message(msg):
         if '!bot' in msg.content:
             embed = discord.Embed(
                     title='Autonomous Agricultural Assistant, at your service :tractor:',
-                    description=':arrows_counterclockwise: `!uniswap`: FARM:USDC Uniswap pool stats\n'
+                    description=':arrows_counterclockwise: `!uniswap`: FARM:ETH Uniswap pool stats\n'
                                 ':farmer: `!profitshare`: FARM profit share pool stats\n'
                                 ':bar_chart: `!trade`: FARM markets and trading\n'
                                 ':teacher: `!apy {number}`: convert between APR and APY\n'
@@ -512,15 +522,15 @@ async def on_message(msg):
                     )
             await msg.channel.send(embed=embed)
         if '!uniswap' in msg.content:
-            uni_addr, uni_deposit_farm, uni_deposit_usdc, uni_farm_frac = get_uniswapstate()
+            uni_addr, uni_deposit_farm, uni_deposit_eth, uni_farm_frac = get_uniswapstate()
             embed = discord.Embed(
-                    title=f':mag: FARM:USDC Uniswap Pool',
+                    title=f':mag: FARM:ETH Uniswap Pool',
                     description=f':bank: Uniswap contract: [{uni_addr}](https://etherscan.io/address/{uni_addr})\n'
-                                f':moneybag: Liquidity: `{uni_deposit_farm:,.2f}` FARM (`{100*uni_farm_frac:.2f}%` of supply), `{uni_deposit_usdc:,.2f}` USDC\n'
+                                f':moneybag: Liquidity: `{uni_deposit_farm:,.2f}` FARM (`{100*uni_farm_frac:.2f}%` of supply), `{uni_deposit_eth:,.2f}` ETH\n'
                                 f':arrows_counterclockwise: [Trade FARM](https://app.uniswap.org/#/swap?outputCurrency=0xa0246c9032bc3a600820415ae600c6388619a14d), '
-                                f'[Add Liquidity](https://app.uniswap.org/#/add/0xa0246c9032bC3A600820415aE600c6388619A14D/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48), '
-                                f'[Remove Liquidity](https://app.uniswap.org/#/remove/0xa0246c9032bC3A600820415aE600c6388619A14D/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)\n'
-                                f':bar_chart: [FARM:USDC Uniswap chart](https://beta.dex.vision/?ticker=UniswapV2:FARMUSDC-0x514906FC121c7878424a5C928cad1852CC545892&interval=15)'
+                                f'[Add Liquidity](https://app.uniswap.org/#/add/0xa0246c9032bC3A600820415aE600c6388619A14D/ETH), '
+                                f'[Remove Liquidity](https://app.uniswap.org/#/remove/0xa0246c9032bC3A600820415aE600c6388619A14D/ETH)\n'
+                                f':bar_chart: [FARM:ETH Uniswap chart](https://beta.dex.vision/?ticker=UniswapV2:FARMUSD-0x56feAccb7f750B997B36A68625C7C596F0B41A58&interval=15)'
                     )
             await msg.channel.send(embed=embed)
         if '!returns' in msg.content:
@@ -540,9 +550,8 @@ async def on_message(msg):
                 await msg.channel.send(embed=embed)
             except:
                 embed = discord.Embed(
-                        title=f':bank: `!returns vaultname`: historical rewards to supported vaults\n'
-                        description=f':bank: `!returns vaultname`: historical rewards to supported vaults\n'
-                                ':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
+                        title=f':bank: `!returns vaultname`: historical rewards to supported vaults\n',
+                        description=f':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
                                 ':dollar: LP $USD: `fcrv-ypool`, `fcrv-3pool`, `fcrv-comp`\n'
                                 ':dollar: LP $USD: `fcrv-husd`, `fcrv-busd`, `fcrv-usdn`\n'
                                 ':mountain: LP $BTC: `fcrv-renwbtc`, `fcrv-tbtc`, `fcrv-obtc`'
@@ -616,14 +625,15 @@ def get_poolreturns(vault):
     return delta_day, delta_week, delta_month
 
 def get_uniswapstate():
-    uni_addr = UNIPOOL_ADDR
+    uni_addr = ASSETS['FARM']['pools']['ETH']['addr']
+    pool_contract = w3.eth.contract(address=uni_addr, abi=UNIPOOL_ABI)
     poolvals = pool_contract.functions['getReserves']().call()
     uni_deposit_farm = poolvals[0]*10**-18
-    uni_deposit_usdc = poolvals[1]*10**-6
+    uni_deposit_eth = poolvals[1]*10**-18
     farm_contract = w3.eth.contract(address=FARM_ADDR, abi=VAULT_ABI)
     farm_totalsupply = farm_contract.functions['totalSupply']().call()*10**-18
     uni_farm_frac = uni_deposit_farm / farm_totalsupply
-    return (uni_addr, uni_deposit_farm, uni_deposit_usdc, uni_farm_frac)
+    return (uni_addr, uni_deposit_farm, uni_deposit_eth, uni_farm_frac)
 
 
 def get_profitsharestate():
