@@ -38,7 +38,7 @@ controller_contract = w3.eth.contract(address=UNIROUTER_ADDR, abi=UNIROUTER_ABI)
 ASSETS = {
     'FARM': {
         'addr':'0xa0246c9032bC3A600820415aE600c6388619A14D',
-        'main_quotetoken':'USDC',
+        'main_quotetoken':'ETH',
         'pools': {
             'USDC': {
                 'router':UNIROUTER_ADDR,
