@@ -103,6 +103,11 @@ vaults = {
   '0x9aA8F427A17d6B0d91B6262989EdC7D45d6aEdf8': {'asset': 'fCRVRENWBTC', 'decimals': 18, 'type': 'timelock',},
   '0x71B9eC42bB3CB40F017D8AD8011BE8e384a95fa5': {'asset': 'f3CRV', 'decimals': 18, 'type': 'timelock',},
   '0x0FE4283e0216F94f5f9750a7a11AC54D3c9C38F3': {'asset': 'fYCRV', 'decimals': 18, },
+  '0x6Bccd7E983E438a56Ba2844883A664Da87E4C43b': {'asset': 'fUNI-BAC-DAI', 'decimals': 18, 'type': 'timelock',},
+  '0xf8b7235fcfd5A75CfDcC0D7BC813817f3Dd17858': {'asset': 'fUNI-BAS-DAI', 'decimals': 18, 'type': 'timelock',},
+  '0x6F14165c6D529eA3Bfe1814d0998449e9c8D157D': {'asset': 'fSUSHI-MIC-USDT', 'decimals': 18, 'type': 'timelock',},
+  '0x145f39B3c6e6a885AA6A8fadE4ca69d64bab69c8': {'asset': 'fSUSHI-MIS-USDT', 'decimals': 18, 'type': 'timelock',},
+  '0x966A70A4d3719A6De6a94236532A0167d5246c72': {'asset': 'fCRV-OBTC', 'decimals': 18, 'type': 'timelock',},
 }
 
 vault_addr = {
@@ -168,36 +173,66 @@ vault_addr = {
         'pool': '0xE2D9FAe95f1e68afca7907dFb36143781f917194',
         'underlying': '0xCEfF51756c56CeFFCA006cD410B03FFC46dd3a58',
         },
-    'profitshare':  {'addr': '0x8f5adC58b32D4e5Ca02EAC0E293D35855999436C',
-                    'pool': '0x25550Cccbd68533Fa04bFD3e3AC4D09f9e00Fc50',
-                    },
-    'fcrv-3pool':   {'addr': '0x71B9eC42bB3CB40F017D8AD8011BE8e384a95fa5',
-                    'pool': '0x27F12d1a08454402175b9F0b53769783578Be7d9',
-                    },
-    'fcrv-ypool':   {'addr': '0x0FE4283e0216F94f5f9750a7a11AC54D3c9C38F3',
-                    'pool': '0x6D1b6Ea108AA03c6993d8010690264BA96D349A8',
-                    },
-    'fcrv-tbtc':    {'addr': '0x640704D106E79e105FDA424f05467F005418F1B5',
-                    'pool': '0x017eC1772A45d2cf68c429A820eF374f0662C57c',
-                    },
-    'fcrv-busd':    {'addr': '0x4b1cBD6F6D8676AcE5E412C78B7a59b4A1bbb68a',
-                    'pool': '0x093C2ae5E6F3D2A897459aa24551289D462449AD',
-                    },
-    'fcrv-usdn':    {'addr': '0x683E683fBE6Cf9b635539712c999f3B3EdCB8664',
-                    'pool': '0xef4Da1CE3f487DA2Ed0BE23173F76274E0D47579',
-                    },
-    'fcrv-comp':    {'addr': '0x998cEb152A42a3EaC1f555B1E911642BeBf00faD',
-                    'pool': '0xC0f51a979e762202e9BeF0f62b07F600d0697DE1',
-                    },
-    'fcrv-husd':    {'addr': '0x29780C39164Ebbd62e9DDDE50c151810070140f2',
-                    'pool': '0x72C50e6FD8cC5506E166c273b6E814342Aa0a3c1',
-                    },
-    'fcrv-hbtc':    {'addr': '0xCC775989e76ab386E9253df5B0c0b473E22102E2',
-                    'pool': '0x01f9CAaD0f9255b0C0Aa2fBD1c1aA06ad8Af7254',
-                    },
-    'uniswap': {'addr': '0x514906FC121c7878424a5C928cad1852CC545892',
-                'pool': '0x99b0d6641A63Ce173E6EB063b3d3AED9A35Cf9bf',
-                },
+    'profitshare': {
+        'addr': '0x8f5adC58b32D4e5Ca02EAC0E293D35855999436C',
+        'pool': '0x25550Cccbd68533Fa04bFD3e3AC4D09f9e00Fc50',
+        },
+    'fcrv-3pool': {
+        'addr': '0x71B9eC42bB3CB40F017D8AD8011BE8e384a95fa5',
+        'pool': '0x27F12d1a08454402175b9F0b53769783578Be7d9',
+        },
+    'fcrv-ypool': {
+        'addr': '0x0FE4283e0216F94f5f9750a7a11AC54D3c9C38F3',
+        'pool': '0x6D1b6Ea108AA03c6993d8010690264BA96D349A8',
+        },
+    'fcrv-tbtc': {
+        'addr': '0x640704D106E79e105FDA424f05467F005418F1B5',
+        'pool': '0x017eC1772A45d2cf68c429A820eF374f0662C57c',
+        },
+    'fcrv-busd': {
+        'addr': '0x4b1cBD6F6D8676AcE5E412C78B7a59b4A1bbb68a', 
+        'pool': '0x093C2ae5E6F3D2A897459aa24551289D462449AD',
+        },
+    'fcrv-usdn': {
+        'addr': '0x683E683fBE6Cf9b635539712c999f3B3EdCB8664',
+        'pool': '0xef4Da1CE3f487DA2Ed0BE23173F76274E0D47579',
+        },
+    'fcrv-comp': {
+        'addr': '0x998cEb152A42a3EaC1f555B1E911642BeBf00faD',
+        'pool': '0xC0f51a979e762202e9BeF0f62b07F600d0697DE1',
+        },
+    'fcrv-husd': {
+        'addr': '0x29780C39164Ebbd62e9DDDE50c151810070140f2',
+        'pool': '0x72C50e6FD8cC5506E166c273b6E814342Aa0a3c1',
+        },
+    'fcrv-hbtc': {
+        'addr': '0xCC775989e76ab386E9253df5B0c0b473E22102E2',
+        'pool': '0x01f9CAaD0f9255b0C0Aa2fBD1c1aA06ad8Af7254',
+        },
+    'uniswap': {
+        'addr': '0x514906FC121c7878424a5C928cad1852CC545892',
+        'pool': '0x99b0d6641A63Ce173E6EB063b3d3AED9A35Cf9bf',
+        },
+    'funi-bac:dai': {
+        'addr': '0x6Bccd7E983E438a56Ba2844883A664Da87E4C43b',
+        'pool': '0x797F1171DC5001B7A79ff7Dca68c9539329ccE48',
+        },
+    'funi-bas:dai': {
+        'addr': '0xf8b7235fcfd5A75CfDcC0D7BC813817f3Dd17858',
+        'pool': '0xf330891f02F8182D7D4e1A962ED0F3086D626020',
+        },
+    'fsushi-mic:usdt': {
+        'addr': '0x6F14165c6D529eA3Bfe1814d0998449e9c8D157D',
+        'pool': '0x98Ba5E432933E2D536e24A2C021deBb8404588C1',
+        },
+    'fsushi-mis:usdt': {
+        'addr': '0x145f39B3c6e6a885AA6A8fadE4ca69d64bab69c8',
+        'pool': '0xf4784d07136b5b10c6223134E8B36E1DC190725b',
+        },
+    'fcrv-obtc': {
+        'addr': '0x966A70A4d3719A6De6a94236532A0167d5246c72',
+        'pool': '0x91B5cD52fDE8dbAC37C95ECafEF0a70bA4c182fC',
+        },
 }
 
 earlyemissions = [
@@ -314,10 +349,9 @@ async def on_message(msg):
                                 ':thinking: `!payout`: information on farming rewards\n'
                                 ':bank: `!vault vaultname`: Harvest vault state of supported vaults\n'
                                 ':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
-                                ':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
                                 ':dollar: LP $USD: `fcrv-ypool`, `fcrv-3pool`, `fcrv-comp`\n'
                                 ':dollar: LP $USD: `fcrv-husd`, `fcrv-busd`, `fcrv-usdn`\n'
-                                ':mountain: LP $BTC: `fcrv-renwbtc`, `fcrv-tbtc`\n'
+                                ':mountain: LP $BTC: `fcrv-renwbtc`, `fcrv-tbtc`, `fcrv-obtc`\n'
                                 ':globe_with_meridians: `!contribute`: contribute to the community wiki\n'
                                 ':chart_with_upwards_trend: improve me [on GitHub](https://github.com/brandoncurtis/harvest-discordbot)'
                     )
@@ -457,9 +491,9 @@ async def on_message(msg):
                         title=f'{vault} Vault State :bank::mag:',
                         description=f':bank: `!vault vaultname`: Harvest vault state of supported vaults\n'
                                 ':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
-                                ':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
                                 ':dollar: LP $USD: `fcrv-ypool`, `fcrv-3pool`, `fcrv-comp`\n'
-                                ':dollar: LP $USD: `fcrv-husd`, `fcrv-busd`, `fcrv-usdn`'
+                                ':dollar: LP $USD: `fcrv-husd`, `fcrv-busd`, `fcrv-usdn`\n'
+                                ':mountain: LP $BTC: `fcrv-renwbtc`, `fcrv-tbtc`, `fcrv-obtc`'
                                 )
                 await msg.channel.send(embed=embed)
         if '!profitshare' in msg.content:
@@ -506,12 +540,12 @@ async def on_message(msg):
                 await msg.channel.send(embed=embed)
             except:
                 embed = discord.Embed(
-                        title=f':tractor: Historical FARM Returns',
+                        title=f':bank: `!returns vaultname`: historical rewards to supported vaults\n'
                         description=f':bank: `!returns vaultname`: historical rewards to supported vaults\n'
                                 ':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
-                                ':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
                                 ':dollar: LP $USD: `fcrv-ypool`, `fcrv-3pool`, `fcrv-comp`\n'
-                                ':dollar: LP $USD: `fcrv-husd`, `fcrv-busd`, `fcrv-usdn`'
+                                ':dollar: LP $USD: `fcrv-husd`, `fcrv-busd`, `fcrv-usdn`\n'
+                                ':mountain: LP $BTC: `fcrv-renwbtc`, `fcrv-tbtc`, `fcrv-obtc`'
                                 )
                 await msg.channel.send(embed=embed)
 
