@@ -243,6 +243,22 @@ vault_addr = {
         'addr': '0x966A70A4d3719A6De6a94236532A0167d5246c72',
         'pool': '0x91B5cD52fDE8dbAC37C95ECafEF0a70bA4c182fC',
         },
+    'f1inch-eth:dai': {
+        'addr': '0x8e53031462E930827a8d482e7d80603B1f86e32d',
+        'pool': '0xDa5E9706274D88bbf1bD1877a9b462fC40cDcfAd',
+        },
+    'f1inch-eth:wbtc': {
+        'addr': '0x859222DD0B249D0ea960F5102DaB79B294d6874a',
+        'pool': '0x747318Cf3171D4E2a1A52bBD3Fcc9f9c690448B4',
+        },
+    'f1inch-eth:usdt': {
+        'addr': '0x4bf633A09bd593f6fb047Db3B4C25ef5B9C5b99e',
+        'pool': '0x2A80e0B572e7EF61Ef81EF05eC024e1e52Bd70BD',
+        },
+    'f1inch-eth:usdc': {
+        'addr': '0xD162395C21357b126C5aFED6921BC8b13e48D690',
+        'pool': '0x9a9A6148f7b0A9767AC1fdC67343D1e3E219FdDf',
+        },
 }
 
 earlyemissions = [
