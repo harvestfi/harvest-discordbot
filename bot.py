@@ -279,6 +279,14 @@ vault_addr = {
         'addr': '0x639d4f3F41daA5f4B94d63C2A5f3e18139ba9E54',
         'pool': '0xf5b221E1d9C3a094Fb6847bC3E241152772BbbF8',
         },
+    'fCRV-UST': {
+        'addr': '0x84A1DfAdd698886A614fD70407936816183C0A02',
+        'pool': '0xDdb5D3CCd968Df64Ce48b577776BdC29ebD3120e',
+        },
+    'fCRV-EURS': {
+        'addr': '0x6eb941BD065b8a5bd699C5405A928c1f561e2e5a',
+        'pool': '0xf4d50f60D53a230abc8268c6697972CB255Cd940',
+        },
 }
 
 earlyemissions = [
