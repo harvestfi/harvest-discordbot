@@ -259,6 +259,26 @@ vault_addr = {
         'addr': '0xD162395C21357b126C5aFED6921BC8b13e48D690',
         'pool': '0x9a9A6148f7b0A9767AC1fdC67343D1e3E219FdDf',
         },
+    'fDSD': {
+        'addr': '0x8Bf3c1c7B1961764Ecb19b4FC4491150ceB1ABB1',
+        'pool': '0x7c497298d9576499e17F9564CE4E13faa87A9b33',
+        },
+    'fESD': {
+        'addr': '0x45a9e027DdD8486faD6fca647Bb132AD03303EC2',
+        'pool': '0xDB9C2EbA87301e6951d6FBE7a458832eaab2137E',
+        },
+    'fBAC': {
+        'addr': '0x371E78676cd8547ef969f89D2ee8fA689C50F86B',
+        'pool': '0x3cddE34C96eCB95A1232c9673e23f2dB5fA72280',
+        },
+    'fUNI-DAI:BSGS': {
+        'addr': '0x633C4861A4E9522353EDa0bb652878B079fb75Fd',
+        'pool': '0x63e7D3F6e208ccE4967b7a0E6A50A397Af0b0E7A',
+        },
+    'fUNI-DAI:BSG': {
+        'addr': '0x639d4f3F41daA5f4B94d63C2A5f3e18139ba9E54',
+        'pool': '0xf5b221E1d9C3a094Fb6847bC3E241152772BbbF8',
+        },
 }
 
 earlyemissions = [
