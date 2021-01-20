@@ -287,6 +287,26 @@ vault_addr = {
         'addr': '0x6eb941BD065b8a5bd699C5405A928c1f561e2e5a',
         'pool': '0xf4d50f60D53a230abc8268c6697972CB255Cd940',
         },
+    'fCRV-stETH': {
+        'addr': '0xc27bfE32E0a934a12681C1b35acf0DBA0e7460Ba',
+        'pool': '0x2E25800957742C52b4d69b65F9C67aBc5ccbffe6',
+        },
+    'fUNI-mTSLA:UST': {
+        'addr': '0xC800982d906671637E23E031e907d2e3487291Bc',
+        'pool': '0x40C34B0E1bb6984810E17474c6B0Bcc6A6B46614',
+        },
+    'fUNI-mGOOGL:UST': {
+        'addr': '0x07DBe6aA35EF70DaD124f4e2b748fFA6C9E1963a',
+        'pool': '0xfE83a00DF3A98dE218c08719FAF7e3741b220D0D',
+        },
+    'fUNI-mAMZN:UST': {
+        'addr': '0x8334A61012A779169725FcC43ADcff1F581350B7',
+        'pool': '0x8Dc427Cbcc75cAe58dD4f386979Eba6662f5C158',
+        },
+    'fUNI-UST:mAAPL': {
+        'addr': '0x11804D69AcaC6Ae9466798325fA7DE023f63Ab53',
+        'pool': '0xc02d1Da469d68Adc651Dd135d1A7f6b42F4d1A57',
+        },
 }
 
 earlyemissions = [
