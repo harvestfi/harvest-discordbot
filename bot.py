@@ -351,7 +351,7 @@ async def on_ready():
     await client.change_presence(activity=activity_start)
     update_price.start()
 
-@tasks.loop(seconds=6)
+@tasks.loop(seconds=13)
 async def update_price():
     global update_index
     asset_list = list(ASSETS.keys())
@@ -605,21 +605,25 @@ async def on_message(msg):
             try:
                 vault = msg.content.split(' ')[-2].lower()
                 bal = float(msg.content.split(' ')[-1])
-                delta_day, delta_week, delta_month = get_poolreturns(vault)
+                delta_day, delta_week, delta_month, vault_delta_day, vault_delta_week, vault_delta_month = get_poolreturns(vault)
+                APYfromAPR_daily_week = 100 * ((1 + (val*100*52) / (100 * 365)) ** 365 - 1)
+
                 monthmsg = ''
+                daymsg = f'\nRewards per `{bal:.2f}` {vault} per day: `{vault_delta_day*100:.2f}%` plus `{bal*delta_day:.4f}` FARM'
+                weekmsg = f'\nRewards per `{bal:.2f}` {vault} per week: `{vault_delta_week*100:.2f}%` (~{APYfromAPR_daily_week:.2f}% APY) plus `{bal*delta_week:.4f}` FARM'
                 if delta_month > 0:
-                    monthmsg = f'\nRewards per `{bal:.2f}` {vault} per month: `{bal*delta_month:.4f}` FARM'
+                    APYfromAPR_daily_month = 100 * ((1 + (val*100*12) / (100 * 365)) ** 365 - 1)
+                    monthmsg = f'\nRewards per `{bal:.2f}` {vault} per month: `{vault_delta_month*100:.2f}%` (~{APYfromAPR_daily_month:.2f}% APY) plus `{bal*delta_month:.4f}` FARM'
                 embed = discord.Embed(
-                        title=f':tractor: Historical FARM Returns',
-                        description=f'Rewards per `{bal:.2f}` {vault} per day: `{bal*delta_day:.4f}` FARM\n'
-                        f'Rewards per `{bal:.2f}` {vault} per week: `{bal*delta_week:.4f}` FARM'
-                        + monthmsg
+                        title = f':tractor: Historical FARM Returns',
+                        description = daymsg + weekmsg + monthmsg
                         )
                 await msg.channel.send(embed=embed)
-            except:
+            except Exception as e:
+                print(e)
                 embed = discord.Embed(
                         title=f':bank: `!returns vaultname`: historical rewards to supported vaults\n',
-                        description=f':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
+                        description=':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
                                 ':dollar: LP $USD: `fcrv-ypool`, `fcrv-3pool`, `fcrv-comp`\n'
                                 ':dollar: LP $USD: `fcrv-husd`, `fcrv-busd`, `fcrv-usdn`\n'
                                 ':mountain: LP $BTC: `fcrv-renwbtc`, `fcrv-tbtc`, `fcrv-obtc`'
@@ -662,7 +666,7 @@ def get_poolreturns(vault):
             ps_delta_month = (ps_current - ps_month) / (ps_month)
         except:
             ps_delta_month = 0
-        return ps_delta_day, ps_delta_week, ps_delta_month
+        return ps_delta_day, ps_delta_week, ps_delta_month, 0, 0, 0
     vault_address = vault_addr[vault]['addr']
     vault_contract = w3.eth.contract(address=vault_address, abi=VAULT_ABI)
     try:
@@ -672,25 +676,39 @@ def get_poolreturns(vault):
     pool_addr = vault_addr[vault]['pool']
     pool_contract = w3.eth.contract(address=pool_addr, abi=POOL_ABI)
     reward_current = pool_contract.functions['earned'](MODEL_ADDR).call()
+    vault_current = vault_contract.functions['getPricePerFullShare']().call()
     try:
+        # FARM rewards
         reward_day = pool_contract.functions['earned'](MODEL_ADDR).call(block_identifier=blocknum-BLOCKS_PER_DAY)
         balance_day = pool_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCKS_PER_DAY)
         delta_day = ((10**-18) / (10**(-1*vault_decimals))) * (reward_current - reward_day) / balance_day
+        # vault return
+        vault_day = vault_contract.functions['getPricePerFullShare']().call(block_identifier=blocknum-BLOCKS_PER_DAY)
+        vault_delta_day = (vault_current - vault_day) / vault_day
     except:
         delta_day = 0
+        vault_delta_day = 0
     try:
         reward_week = pool_contract.functions['earned'](MODEL_ADDR).call(block_identifier=blocknum-BLOCKS_PER_DAY*7)
-        balance_week = pool_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCKS_PER_DAY)
+        balance_week = pool_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCKS_PER_DAY*7)
         delta_week = ((10**-18) / (10**(-1*vault_decimals))) * (reward_current - reward_week) / balance_week
+        # vault return
+        vault_week = vault_contract.functions['getPricePerFullShare']().call(block_identifier=blocknum-BLOCKS_PER_DAY*7)
+        vault_delta_week = (vault_current - vault_week) / vault_week
     except:
         delta_week= 0
+        vault_delta_week = 0
     try:
         reward_month = pool_contract.functions['earned'](MODEL_ADDR).call(block_identifier=blocknum-BLOCKS_PER_DAY*30)
-        balance_month = pool_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCKS_PER_DAY)
+        balance_month = pool_contract.functions['balanceOf'](MODEL_ADDR).call(block_identifier=blocknum-BLOCKS_PER_DAY*30)
         delta_month = ((10**-18) / (10**(-1*vault_decimals))) * (reward_current - reward_month) / balance_month
+        # vault return
+        vault_month = vault_contract.functions['getPricePerFullShare']().call(block_identifier=blocknum-BLOCKS_PER_DAY*30)
+        vault_delta_month = (vault_current - vault_month) / vault_month
     except:
         delta_month= 0
-    return delta_day, delta_week, delta_month
+        vault_delta_month = 0
+    return delta_day, delta_week, delta_month, vault_delta_day, vault_delta_week, vault_delta_month
 
 def get_uniswapstate():
     uni_addr = ASSETS['FARM']['pools']['ETH']['addr']
