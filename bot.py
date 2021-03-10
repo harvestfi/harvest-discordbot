@@ -18,21 +18,30 @@ load_dotenv(override=True)
 DISCORD_WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 NODE_URL = os.getenv("NODE_URL")
+NODE_URL_MATIC = os.getenv("NODE_URL_MATIC")
+EXPLORER_MATIC = 'https://explorer-mainnet.maticvigil.com/'
 UNIROUTER_ADDR = os.getenv("UNIROUTER_ADDR")
 UNIROUTER_ABI = os.getenv("UNIROUTER_ABI")
 UNIPOOL_ABI = os.getenv("UNIPOOL_ABI")
+MOONISWAP_ABI = os.getenv("MOONISWAP_ABI")
 VAULT_ABI = os.getenv("VAULT_ABI")
 PS_ABI = os.getenv("PS_ABI")
 POOL_ABI = os.getenv("POOL_ABI")
 TOKEN_ABI = os.getenv("TOKEN_ABI")
+ROOTCHAIN_ABI = os.getenv("ROOTCHAIN_ABI")
 FARM_ADDR = '0xa0246c9032bC3A600820415aE600c6388619A14D'
 MODEL_ADDR = '0x814055779F8d2F591277b76C724b7AdC74fb82D9'
+TRACTOR_ADDR = '0xbed04C43E74150794F2ff5b62B4F73820EDaF661'
+ROOTCHAIN_ADDR = '0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287'
+TRACTOR_ETH_MINLIMIT = 3.0
+UPDATE_SECONDS = 10
 
 ONE_18DEC = 1000000000000000000
-ZERO_ADDR = '0x0000000000000000000000000000000000000000'
+ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 BLOCKS_PER_DAY = int((60/13.2)*60*24) #~7200 at 12 sec
 
 w3 = Web3(Web3.HTTPProvider(NODE_URL))
+m3 = Web3(Web3.HTTPProvider(NODE_URL_MATIC))
 controller_contract = w3.eth.contract(address=UNIROUTER_ADDR, abi=UNIROUTER_ABI)
 
 ASSETS = {
@@ -86,38 +95,63 @@ ASSETS = {
 }
 
 vaults = {
-  '0x8e298734681adbfC41ee5d17FF8B0d6d803e7098': {'asset': 'fWETH-v0', 'decimals': 18,},
-  '0xe85C8581e60D7Cd32Bbfd86303d2A4FA6a951Dac': {'asset': 'fDAI-v0', 'decimals': 18,},
-  '0xc3F7ffb5d5869B3ade9448D094d81B0521e8326f': {'asset': 'fUSDC-v0', 'decimals': 6,},
-  '0xc7EE21406BB581e741FBb8B21f213188433D9f2F': {'asset': 'fUSDT-v0', 'decimals': 6,},
-  '0xF2B223Eb3d2B382Ead8D85f3c1b7eF87c1D35f3A': {'asset': 'FARM yDAI+yUSDC+yUSDT+yTUSD', 'decimals': 18,},
-  '0xfBe122D0ba3c75e1F7C80bd27613c9f35B81FEeC': {'asset': 'fRenBTC-v0', 'decimals': 8,},
-  '0xc07EB91961662D275E2D285BdC21885A4Db136B0': {'asset': 'fWBTC-v0', 'decimals': 8,},
-  '0x192E9d29D43db385063799BC239E772c3b6888F3': {'asset': 'fCRVRenWBTC-v0', 'decimals': 18,},
-  '0xb1FeB6ab4EF7d0f41363Da33868e85EB0f3A57EE': {'asset': 'fUNI-ETH-WBTC-v0', 'decimals': 18,},
-  '0xB19EbFB37A936cCe783142955D39Ca70Aa29D43c': {'asset': 'fUNI-ETH-USDT-v0', 'decimals': 18,},
-  '0x63671425ef4D25Ec2b12C7d05DE855C143f16e3B': {'asset': 'fUNI-ETH-USDC-v0', 'decimals': 18,},
-  '0x1a9F22b4C385f78650E7874d64e442839Dc32327': {'asset': 'fUNI-ETH-DAI-v0', 'decimals': 18,},
-  '0x01112a60f427205dcA6E229425306923c3Cc2073': {'asset': 'fUNI-ETH-WBTC', 'decimals': 18, 'type': 'timelock',},
-  '0x7DDc3ffF0612E75Ea5ddC0d6Bd4e268f70362Cff': {'asset': 'fUNI-ETH-USDT', 'decimals': 18, 'type': 'timelock',},
-  '0xA79a083FDD87F73c2f983c5551EC974685D6bb36': {'asset': 'fUNI-ETH-USDC', 'decimals': 18, 'type': 'timelock',},
-  '0x307E2752e8b8a9C29005001Be66B1c012CA9CDB7': {'asset': 'fUNI-ETH-DAI', 'decimals': 18, 'type': 'timelock',},
-  '0xF553E1f826f42716cDFe02bde5ee76b2a52fc7EB': {'asset': 'fSUSHI-WBTC-TBTC', 'decimals': 18, 'type': 'timelock',},
-  '0x7674622c63Bee7F46E86a4A5A18976693D54441b': {'asset': 'fTUSD', 'decimals': 18, 'type': 'timelock',},
-  '0xFE09e53A81Fe2808bc493ea64319109B5bAa573e': {'asset': 'fWETH', 'decimals': 18, 'type': 'timelock',},
-  '0xab7FA2B2985BCcfC13c6D86b1D5A17486ab1e04C': {'asset': 'fDAI', 'decimals': 18, 'type': 'timelock',},
-  '0xf0358e8c3CD5Fa238a29301d0bEa3D63A17bEdBE': {'asset': 'fUSDC', 'decimals': 6, 'type': 'timelock',},
-  '0x053c80eA73Dc6941F518a68E2FC52Ac45BDE7c9C': {'asset': 'fUSDT', 'decimals': 6, 'type': 'timelock',},
-  '0x5d9d25c7C457dD82fc8668FFC6B9746b674d4EcB': {'asset': 'fWBTC', 'decimals': 8, 'type': 'timelock',},
-  '0xC391d1b08c1403313B0c28D47202DFDA015633C4': {'asset': 'fRENBTC', 'decimals': 8, 'type': 'timelock',},
-  '0x9aA8F427A17d6B0d91B6262989EdC7D45d6aEdf8': {'asset': 'fCRVRENWBTC', 'decimals': 18, 'type': 'timelock',},
-  '0x71B9eC42bB3CB40F017D8AD8011BE8e384a95fa5': {'asset': 'f3CRV', 'decimals': 18, 'type': 'timelock',},
-  '0x0FE4283e0216F94f5f9750a7a11AC54D3c9C38F3': {'asset': 'fYCRV', 'decimals': 18, },
-  '0x6Bccd7E983E438a56Ba2844883A664Da87E4C43b': {'asset': 'fUNI-BAC-DAI', 'decimals': 18, 'type': 'timelock',},
-  '0xf8b7235fcfd5A75CfDcC0D7BC813817f3Dd17858': {'asset': 'fUNI-BAS-DAI', 'decimals': 18, 'type': 'timelock',},
-  '0x6F14165c6D529eA3Bfe1814d0998449e9c8D157D': {'asset': 'fSUSHI-MIC-USDT', 'decimals': 18, 'type': 'timelock',},
-  '0x145f39B3c6e6a885AA6A8fadE4ca69d64bab69c8': {'asset': 'fSUSHI-MIS-USDT', 'decimals': 18, 'type': 'timelock',},
-  '0x966A70A4d3719A6De6a94236532A0167d5246c72': {'asset': 'fCRV-OBTC', 'decimals': 18, 'type': 'timelock',},
+#  '0x8e298734681adbfC41ee5d17FF8B0d6d803e7098': {'asset': 'fWETH-v0', 'decimals': 18,},
+#  '0xe85C8581e60D7Cd32Bbfd86303d2A4FA6a951Dac': {'asset': 'fDAI-v0', 'decimals': 18,},
+#  '0xc3F7ffb5d5869B3ade9448D094d81B0521e8326f': {'asset': 'fUSDC-v0', 'decimals': 6,},
+#  '0xc7EE21406BB581e741FBb8B21f213188433D9f2F': {'asset': 'fUSDT-v0', 'decimals': 6,},
+#  '0xF2B223Eb3d2B382Ead8D85f3c1b7eF87c1D35f3A': {'asset': 'FARM yDAI+yUSDC+yUSDT+yTUSD', 'decimals': 18,},
+#  '0xfBe122D0ba3c75e1F7C80bd27613c9f35B81FEeC': {'asset': 'fRenBTC-v0', 'decimals': 8,},
+#  '0xc07EB91961662D275E2D285BdC21885A4Db136B0': {'asset': 'fWBTC-v0', 'decimals': 8,},
+#  '0x192E9d29D43db385063799BC239E772c3b6888F3': {'asset': 'fCRVRenWBTC-v0', 'decimals': 18,},
+#  '0xb1FeB6ab4EF7d0f41363Da33868e85EB0f3A57EE': {'asset': 'fUNI-ETH-WBTC-v0', 'decimals': 18,},
+#  '0xB19EbFB37A936cCe783142955D39Ca70Aa29D43c': {'asset': 'fUNI-ETH-USDT-v0', 'decimals': 18,},
+#  '0x63671425ef4D25Ec2b12C7d05DE855C143f16e3B': {'asset': 'fUNI-ETH-USDC-v0', 'decimals': 18,},
+#  '0x1a9F22b4C385f78650E7874d64e442839Dc32327': {'asset': 'fUNI-ETH-DAI-v0', 'decimals': 18,},
+  '0xFE09e53A81Fe2808bc493ea64319109B5bAa573e': {'asset': 'fWETH', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0xab7FA2B2985BCcfC13c6D86b1D5A17486ab1e04C': {'asset': 'fDAI', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0xf0358e8c3CD5Fa238a29301d0bEa3D63A17bEdBE': {'asset': 'fUSDC', 'decimals': 6, 'type': 'timelock', 'lptype': 'none',},
+  '0x053c80eA73Dc6941F518a68E2FC52Ac45BDE7c9C': {'asset': 'fUSDT', 'decimals': 6, 'type': 'timelock', 'lptype': 'none',},
+  '0x7674622c63Bee7F46E86a4A5A18976693D54441b': {'asset': 'fTUSD', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0x5d9d25c7C457dD82fc8668FFC6B9746b674d4EcB': {'asset': 'fWBTC', 'decimals': 8, 'type': 'timelock', 'lptype': 'none',},
+  '0xC391d1b08c1403313B0c28D47202DFDA015633C4': {'asset': 'fRENBTC', 'decimals': 8, 'type': 'timelock', 'lptype': 'none',},
+  '0x8Bf3c1c7B1961764Ecb19b4FC4491150ceB1ABB1': {'asset': 'fDSD', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0x45a9e027DdD8486faD6fca647Bb132AD03303EC2': {'asset': 'fESD', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0x371E78676cd8547ef969f89D2ee8fA689C50F86B': {'asset': 'fBAC', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0x71B9eC42bB3CB40F017D8AD8011BE8e384a95fa5': {'asset': 'fCRV-3POOL', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0x0FE4283e0216F94f5f9750a7a11AC54D3c9C38F3': {'asset': 'fCRV-YPOOL', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0x998cEb152A42a3EaC1f555B1E911642BeBf00faD': {'asset': 'fCRV-COMP', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0x4b1cBD6F6D8676AcE5E412C78B7a59b4A1bbb68a': {'asset': 'fCRV-BUSD', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0xB8671E33fcFC7FEA2F7a3Ea4a117F065ec4b009E': {'asset': 'fCRV-GUSD', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0x29780C39164Ebbd62e9DDDE50c151810070140f2': {'asset': 'fCRV-HUSD', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0x683E683fBE6Cf9b635539712c999f3B3EdCB8664': {'asset': 'fCRV-USDN', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0x84A1DfAdd698886A614fD70407936816183C0A02': {'asset': 'fCRV-UST', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0x6eb941BD065b8a5bd699C5405A928c1f561e2e5a': {'asset': 'fCRV-EURS', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0x9aA8F427A17d6B0d91B6262989EdC7D45d6aEdf8': {'asset': 'fCRV-RENWBTC', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0x640704D106E79e105FDA424f05467F005418F1B5': {'asset': 'fCRV-TBTC', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0xCC775989e76ab386E9253df5B0c0b473E22102E2': {'asset': 'fCRV-HBTC', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0x966A70A4d3719A6De6a94236532A0167d5246c72': {'asset': 'fCRV-OBTC', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0xc27bfE32E0a934a12681C1b35acf0DBA0e7460Ba': {'asset': 'fCRV-stETH', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+  '0x6Bccd7E983E438a56Ba2844883A664Da87E4C43b': {'asset': 'fUNI-BAC:DAI', 'decimals': 18, 'type': 'timelock', 'lptype': 'uniswap',},
+  '0xf8b7235fcfd5A75CfDcC0D7BC813817f3Dd17858': {'asset': 'fUNI-BAS:DAI', 'decimals': 18, 'type': 'timelock', 'lptype': 'uniswap',},
+  '0x633C4861A4E9522353EDa0bb652878B079fb75Fd': {'asset': 'fUNI-DAI:BSGS', 'decimals': 18, 'type': 'timelock', 'lptype': 'uniswap',},
+  '0x639d4f3F41daA5f4B94d63C2A5f3e18139ba9E54': {'asset': 'fUNI-DAI:BSG', 'decimals': 18, 'type': 'timelock', 'lptype': 'uniswap',},
+  '0x11804D69AcaC6Ae9466798325fA7DE023f63Ab53': {'asset': 'fUNI-UST:mAAPL', 'decimals': 18, 'type': 'timelock', 'lptype': 'uniswap',},
+  '0x8334A61012A779169725FcC43ADcff1F581350B7': {'asset': 'fUNI-mAMZN:UST', 'decimals': 18, 'type': 'timelock', 'lptype': 'uniswap',},
+  '0x07DBe6aA35EF70DaD124f4e2b748fFA6C9E1963a': {'asset': 'fUNI-mGOOGL:UST', 'decimals': 18, 'type': 'timelock', 'lptype': 'uniswap',},
+  '0xC800982d906671637E23E031e907d2e3487291Bc': {'asset': 'fUNI-mTSLA:UST', 'decimals': 18, 'type': 'timelock', 'lptype': 'uniswap',},
+  '0x01112a60f427205dcA6E229425306923c3Cc2073': {'asset': 'fUNI-ETH:WBTC', 'decimals': 18, 'type': 'timelock', 'lptype': 'uniswap',},
+  '0x7DDc3ffF0612E75Ea5ddC0d6Bd4e268f70362Cff': {'asset': 'fUNI-ETH:USDT', 'decimals': 18, 'type': 'timelock', 'lptype': 'uniswap',},
+  '0xA79a083FDD87F73c2f983c5551EC974685D6bb36': {'asset': 'fUNI-ETH:USDC', 'decimals': 18, 'type': 'timelock', 'lptype': 'uniswap',},
+  '0x307E2752e8b8a9C29005001Be66B1c012CA9CDB7': {'asset': 'fUNI-ETH:DAI', 'decimals': 18, 'type': 'timelock', 'lptype': 'uniswap',},
+  '0xF553E1f826f42716cDFe02bde5ee76b2a52fc7EB': {'asset': 'fSUSHI-WBTC:TBTC', 'decimals': 18, 'type': 'timelock', 'lptype': 'uniswap',},
+  '0x6F14165c6D529eA3Bfe1814d0998449e9c8D157D': {'asset': 'fSUSHI-MIC:USDT', 'decimals': 18, 'type': 'timelock', 'lptype': 'uniswap',},
+  '0x145f39B3c6e6a885AA6A8fadE4ca69d64bab69c8': {'asset': 'fSUSHI-MIS:USDT', 'decimals': 18, 'type': 'timelock', 'lptype': 'uniswap',},
+  '0x5aDe382F38A09A1F8759D06fFE2067992ab5c78e': {'asset': 'fSUSHI-SUSHI:ETH', 'decimals': 18, 'type': 'timelock', 'lptype': 'uniswap',},
+  '0x8e53031462E930827a8d482e7d80603B1f86e32d': {'asset': 'f1INCH-ETH:DAI', 'decimals': 18, 'type': 'timelock', 'lptype': '1inch',},
+  '0x859222DD0B249D0ea960F5102DaB79B294d6874a': {'asset': 'f1INCH-ETH:WBTC', 'decimals': 18, 'type': 'timelock', 'lptype': '1inch',},
+  '0x4bf633A09bd593f6fb047Db3B4C25ef5B9C5b99e': {'asset': 'f1INCH-ETH:USDT', 'decimals': 18, 'type': 'timelock', 'lptype': '1inch',},
+  '0xD162395C21357b126C5aFED6921BC8b13e48D690': {'asset': 'f1INCH-ETH:USDC', 'decimals': 18, 'type': 'timelock', 'lptype': '1inch',},
+#  '0x8f5adC58b32D4e5Ca02EAC0E293D35855999436C': {'asset': 'profitshare', 'decimals': 18, },
 }
 
 vault_addr = {
@@ -183,9 +217,17 @@ vault_addr = {
         'pool': '0xE2D9FAe95f1e68afca7907dFb36143781f917194',
         'underlying': '0xCEfF51756c56CeFFCA006cD410B03FFC46dd3a58',
         },
+    'fsushi-sushi:eth': {
+        'addr': '0x5aDe382F38A09A1F8759D06fFE2067992ab5c78e',
+        'pool': '0x16fBb193f99827C92A4CC22EFe8eD7390465BFa3',
+        },
     'profitshare': {
         'addr': '0x8f5adC58b32D4e5Ca02EAC0E293D35855999436C',
         'pool': '0x25550Cccbd68533Fa04bFD3e3AC4D09f9e00Fc50',
+        },
+    'ifarm': {
+        'addr': '0x1571eD0bed4D987fe2b498DdBaE7DFA19519F651',
+        'pool': '',
         },
     'fcrv-3pool': {
         'addr': '0x71B9eC42bB3CB40F017D8AD8011BE8e384a95fa5',
@@ -311,6 +353,22 @@ vault_addr = {
         'addr': '0xB8671E33fcFC7FEA2F7a3Ea4a117F065ec4b009E',
         'pool': '0x538613A19Eb84D86a4CcfcB63548244A52Ab0B68',
         },
+    'fcrv-aave': {
+        'addr': '0xc3EF8C4043D7cf1D15B6bb4cd307C844E0BA9d42',
+        'pool': '0x10f1fc85eAA1F064e38EEffDa82fBa414841f438',
+        },
+    'iFARM': {
+        'addr': '0x1571eD0bed4D987fe2b498DdBaE7DFA19519F651',
+        'pool': '',
+        },
+    'funi-wbtc:klon': {
+        'addr': '0xB4E3fC276532f27Bd0F738928Ce083A3b064ba61',
+        'pool': '0x719d70457658358f2e785B38307CfE24071b7417',
+        },
+    'funi-wbtc:kbtc': {
+        'addr': '0x5cd9Db40639013A08d797A839C9BECD6EC5DCD4D',
+        'pool': '0xdD496A6Ba1B4Cf2b3ef42dEf132e2B2c570941FE',
+        },
 }
 
 earlyemissions = [
@@ -350,8 +408,9 @@ async def on_ready():
     print('We have logged in as {0.user}'.format(client))
     await client.change_presence(activity=activity_start)
     update_price.start()
+    check_tractor.start()
 
-@tasks.loop(seconds=13)
+@tasks.loop(seconds=UPDATE_SECONDS)
 async def update_price():
     global update_index
     asset_list = list(ASSETS.keys())
@@ -398,8 +457,8 @@ async def update_price():
     print(f'updating the price...')
     msg = f'${price:.{price_decimals}f} {basetoken_name}'
     # twap hack
-    if (update_index % 3 == 0):
-        msg = f'${get_twap():0.2f} FARM TWAP'
+    #if (update_index % 3 == 0):
+    #    msg = f'${get_twap():0.2f} FARM TWAP'
 
     new_price = discord.Streaming(name=msg,url=f'https://etherscan.io/token/basetoken["addr"]')
     print(msg)
@@ -407,9 +466,18 @@ async def update_price():
     update_index += 1
 
 
-
-
-
+@tasks.loop(seconds=14400)
+async def check_tractor():
+    channel = client.get_channel(802268512079839302) #msig channel
+    tractor_balance_eth_display = get_tractor_state()['eth']
+    if (tractor_balance_eth_display < TRACTOR_ETH_MINLIMIT):
+        print(f'Tractor balance low! {tractor_balance_eth_display:.4f} ETH')
+        embed = discord.Embed(
+                    title=':wrench: Tractor Maintenance Needed!',
+                    description=f':map: tractor is parked at [{TRACTOR_ADDR}](https://etherscan.io/address/{TRACTOR_ADDR})\n'
+                                f':fuelpump: fuel gauge low: {tractor_balance_eth_display:.4f} ETH',
+                    )
+        await channel.send(embed=embed)
 
 
 @client.event
@@ -432,6 +500,14 @@ async def on_message(msg):
                                 ':mountain: LP $BTC: `fcrv-renwbtc`, `fcrv-tbtc`, `fcrv-obtc`\n'
                                 ':globe_with_meridians: `!contribute`: contribute to the community wiki\n'
                                 ':chart_with_upwards_trend: improve me [on GitHub](https://github.com/brandoncurtis/harvest-discordbot)'
+                    )
+            await msg.channel.send(embed=embed)
+        if '!tractor' in msg.content:
+            tractor_balance_eth_display = get_tractor_state()['eth']
+            embed = discord.Embed(
+                    title=':tractor: Status of Chad\'s Tractor',
+                    description=f':map: tractor is parked at [{TRACTOR_ADDR}](https://etherscan.io/address/{TRACTOR_ADDR})\n'
+                                f':fuelpump: fuel gauge: {tractor_balance_eth_display:.4f} ETH',
                     )
             await msg.channel.send(embed=embed)
         if '!payout' in msg.content:
@@ -576,7 +652,7 @@ async def on_message(msg):
                 await msg.channel.send(embed=embed)
         if '!profitshare' in msg.content:
             ps_address = vault_addr['profitshare']['addr']
-            ps_deposits, ps_rewardperday, ps_rewardfinish, ps_stake_frac = get_profitsharestate()
+            ps_deposits, ps_rewardperday, ps_rewardfinish, ps_stake_frac, ps_ifarm_deposits, ps_ifarm_pending = get_profitsharestate()
             ps_apr = 100* (ps_rewardperday / ps_deposits) * 365
             ps_timeleft = ( ps_rewardfinish - datetime.datetime.now() )
             embed = discord.Embed(
@@ -586,7 +662,8 @@ async def on_message(msg):
                                 f':bar_chart: Profitshare rewards per day: `{ps_rewardperday:,.2f}` FARM'
                                 f' (`{ps_apr:.2f}%` instantaneous APR)\n'
                                 f':alarm_clock: Current harvests pay out until: `{ps_rewardfinish} GMT`'
-                                f' (`{ps_timeleft.total_seconds()/3600:.1f}` hours)'
+                                f' (`{ps_timeleft.total_seconds()/3600:.1f}` hours)\n'
+                                f':bank: iFARM supply: `{ps_ifarm_deposits:,.2f}` (`{ps_ifarm_pending:,.2f}` pending)'
                     )
             await msg.channel.send(embed=embed)
         if '!uniswap' in msg.content:
@@ -606,29 +683,301 @@ async def on_message(msg):
                 vault = msg.content.split(' ')[-2].lower()
                 bal = float(msg.content.split(' ')[-1])
                 delta_day, delta_week, delta_month, vault_delta_day, vault_delta_week, vault_delta_month = get_poolreturns(vault)
-                APYfromAPR_daily_week = 100 * ((1 + (val*100*52) / (100 * 365)) ** 365 - 1)
-
+                weekmsg = ''
                 monthmsg = ''
-                daymsg = f'\nRewards per `{bal:.2f}` {vault} per day: `{vault_delta_day*100:.2f}%` plus `{bal*delta_day:.4f}` FARM'
-                weekmsg = f'\nRewards per `{bal:.2f}` {vault} per week: `{vault_delta_week*100:.2f}%` (~{APYfromAPR_daily_week:.2f}% APY) plus `{bal*delta_week:.4f}` FARM'
+                daymsg = f'\nIn the last day: `{vault_delta_day*100:.2f}%` plus `{bal*delta_day:.4f}` FARM'
+                if delta_week > 0:
+                    APYfromAPR_daily_week = 100 * ((1 + (vault_delta_week*100*52) / (100 * 365)) ** 365 - 1)
+                    weekmsg = f'\nIn the last week: `{vault_delta_week*100:.2f}%` (~`{APYfromAPR_daily_week:.2f}%` APY) plus `{bal*delta_week:.4f}` FARM'
                 if delta_month > 0:
-                    APYfromAPR_daily_month = 100 * ((1 + (val*100*12) / (100 * 365)) ** 365 - 1)
-                    monthmsg = f'\nRewards per `{bal:.2f}` {vault} per month: `{vault_delta_month*100:.2f}%` (~{APYfromAPR_daily_month:.2f}% APY) plus `{bal*delta_month:.4f}` FARM'
+                    APYfromAPR_daily_month = 100 * ((1 + (vault_delta_month*100*12) / (100 * 365)) ** 365 - 1)
+                    monthmsg = f'\nIn the last month: `{vault_delta_month*100:.2f}%` (~`{APYfromAPR_daily_month:.2f}%` APY) plus `{bal*delta_month:.4f}` FARM'
                 embed = discord.Embed(
-                        title = f':tractor: Historical FARM Returns',
+                        title = f':tractor: Historical returns for a deposit of {bal:.4f} {vault}',
                         description = daymsg + weekmsg + monthmsg
                         )
                 await msg.channel.send(embed=embed)
             except Exception as e:
                 print(e)
                 embed = discord.Embed(
-                        title=f':bank: `!returns vaultname`: historical rewards to supported vaults\n',
-                        description=':lock: `f{coin}`, `funi-eth:{coin}`, `fsushi-eth:{coin}`\n'
-                                ':dollar: LP $USD: `fcrv-ypool`, `fcrv-3pool`, `fcrv-comp`\n'
-                                ':dollar: LP $USD: `fcrv-husd`, `fcrv-busd`, `fcrv-usdn`\n'
-                                ':mountain: LP $BTC: `fcrv-renwbtc`, `fcrv-tbtc`, `fcrv-obtc`'
+                        title=f':bank: `!returns vaultname #`: historical rewards to supported vaults\n',
+                        description=':pencil: note: must include # of tokens to calculate returns on\n'
+                                ':dollar: `f{dai,usdc,usdt,tusd}`, `fcrv-{ypool,3pool,comp,aave}`\n'
+                                ':dollar: `f{bac,esd,dsd}`, `fcrv-{busd,gusd,husd,usdn,ust,eurs}`\n'
+                                ':mountain: `f{wbtc,renbtc}`, `fcrv-{tbtc,hbtc,obtc,renwbtc}`\n'
+                                ':chart_with_upwards_trend: `funi-{ust:maapl,mamzn:ust,mgoogl:ust,mtsla:ust}`\n'
+                                ':lock: `funi-{eth:dpi,farm:eth,farm:grain}`\n'
                                 )
                 await msg.channel.send(embed=embed)
+        if '!portfolio' in msg.content:
+            address = msg.content.split(' ')[-1].lower()
+            if w3.isAddress(address):
+                portfolio = get_portfolio(address)
+                # Discord has message length limits
+                for i in range(0, len(portfolio), 25):
+                    embed = discord.Embed(
+                            title=f':bank: Portfolio for `{address}`\n',
+                            description= f'Balances are listed in the underlying token. [Etherscan ↗](https://etherscan.io/address/{address})\n'
+                                    + '```' + "\n".join(portfolio[i:i+25]) + '```'
+                            )
+                    await msg.channel.send(embed=embed)
+            else:
+                embed = discord.Embed(
+                        title=f':bank: Portfolio for `{address}`\n',
+                        description=f'This is NOT a valid Ethereum address.\n'
+                                f'Please provide a valid Ethereum address.\n'
+                        )
+                await msg.channel.send(embed=embed)
+        if '!limit usdc' in msg.content:
+            sell_farm_usdc_url = 'https://api.0x.org/sra/v3/orders?makerAssetData=0xf47261b0000000000000000000000000a0246c9032bc3a600820415ae600c6388619a14d&takerAssetData=0xf47261b0000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
+            res = requests.get(sell_farm_usdc_url)
+            buy_orders = res.json()["records"]
+            buy_desc = []
+            for order in buy_orders:
+                order = order["order"]
+                buy_amount = int(order["takerAssetAmount"])*10**-6
+                sell_amount = int(order["makerAssetAmount"])*10**-18
+                buy_price = sell_amount / buy_amount
+                sell_price = buy_amount / sell_amount
+                buy_desc.append(f'`{sell_price:07.2f}` USDC: `{sell_amount:.2f}` FARM')
+            buy_desc.sort(reverse=True)
+            embed = discord.Embed(
+                    title=f':mag: FARM limit sell orders',
+                    description='\n'.join(buy_desc)
+                    )
+            # send buys
+            await msg.channel.send(embed=embed)
+            buy_farm_usdc_url = 'https://api.0x.org/sra/v3/orders?takerAssetData=0xf47261b0000000000000000000000000a0246c9032bc3a600820415ae600c6388619a14d&makerAssetData=0xf47261b0000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
+            res = requests.get(buy_farm_usdc_url)
+            buy_orders = res.json()["records"]
+            buy_desc = []
+            for order in buy_orders:
+                order = order["order"]
+                buy_amount = int(order["takerAssetAmount"])*10**-18
+                sell_amount = int(order["makerAssetAmount"])*10**-6
+                buy_price = sell_amount / buy_amount
+                buy_desc.append(f'`{buy_price:07.2f}` USDC: `{buy_amount:.2f}` FARM')
+            buy_desc.sort(reverse=True)
+            embed = discord.Embed(
+                    title=f':mag: FARM limit buy orders',
+                    description='\n'.join(buy_desc)
+                    )
+            # send buys
+            await msg.channel.send(embed=embed)
+
+        if '!limit eth' in msg.content:
+            sell_farm_eth_url = 'https://api.0x.org/sra/v3/orders?makerAssetData=0xf47261b0000000000000000000000000a0246c9032bc3a600820415ae600c6388619a14d&takerAssetData=0xf47261b0000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
+            res = requests.get(sell_farm_eth_url)
+            buy_orders = res.json()["records"]
+            buy_desc = []
+            for order in buy_orders:
+                order = order["order"]
+                buy_amount = int(order["takerAssetAmount"])*10**-18
+                sell_amount = int(order["makerAssetAmount"])*10**-18
+                buy_price = sell_amount / buy_amount
+                sell_price = buy_amount / sell_amount
+                buy_desc.append(f'`{sell_price:07.3f}` ETH: `{sell_amount:.2f}` FARM')
+            buy_desc.sort(reverse=True)
+            embed = discord.Embed(
+                    title=f':mag: FARM limit sell orders',
+                    description='\n'.join(buy_desc)
+                    )
+            # send buys
+            await msg.channel.send(embed=embed)
+            buy_farm_eth_url = 'https://api.0x.org/sra/v3/orders?takerAssetData=0xf47261b0000000000000000000000000a0246c9032bc3a600820415ae600c6388619a14d&makerAssetData=0xf47261b0000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
+            res = requests.get(buy_farm_eth_url)
+            buy_orders = res.json()["records"]
+            buy_desc = []
+            for order in buy_orders:
+                order = order["order"]
+                buy_amount = int(order["takerAssetAmount"])*10**-18
+                sell_amount = int(order["makerAssetAmount"])*10**-18
+                buy_price = sell_amount / buy_amount
+                buy_desc.append(f'`{buy_price:07.3f}` ETH: `{buy_amount:.2f}` FARM')
+            buy_desc.sort(reverse=True)
+            embed = discord.Embed(
+                    title=f':mag: FARM limit buy orders',
+                    description='\n'.join(buy_desc)
+                    )
+            # send buys
+            await msg.channel.send(embed=embed)
+
+        if '!matic' in msg.content:
+            matic_state = get_matic_state()
+            mifarm_supply_display = matic_state['mifarm_supply']
+            ifarm_supply_display = matic_state['ifarm_supply']
+            farm_supply_display = matic_state['farm_supply']
+            mifarm_addr = matic_state['mifarm_addr']
+            matic_checkpoint_time = datetime.datetime.fromtimestamp(matic_state['last_checkpoint_time'])
+            matic_checkpoint_delta = matic_checkpoint_time - datetime.datetime.now()
+            embed = discord.Embed(
+                    title=f':mag: Harvest on Matic',
+                    description=f':rocket: There is `{mifarm_supply_display:,.2f}` iFARM on [Matic Mainnet]({EXPLORER_MATIC + "token/" + mifarm_addr})\n'
+                                f':teacher: (`{100*mifarm_supply_display/ifarm_supply_display:,.2f}%` of `{ifarm_supply_display:,.2f}` iFARM;'
+                                f' `{100*mifarm_supply_display/farm_supply_display:,.2f}%` of `{farm_supply_display:,.2f}` FARM)\n'
+                                f':fox: [Configure Metamask](https://docs.matic.network/docs/develop/metamask/config-matic/)'
+                                f' and use the [Matic Bridge](https://wallet.matic.network/bridge) to move iFARM to Matic\n'
+                                f':arrows_counterclockwise: Trade iFARM on [Matic Quickswap](https://quickswap.exchange/#/swap?inputCurrency=0xab0b2ddb9c7e440fac8e140a89c0dbcbf2d7bbff)'
+                                f' ([iFARM stats on Quickswap](https://info.quickswap.exchange/token/0xab0b2ddb9c7e440fac8e140a89c0dbcbf2d7bbff))\n'
+                                f':alarm_clock: last [checkpoint](https://etherscan.io/address/0x86e4dc95c7fbdbf52e33d563bbdb00823894c287) on Ethereum: `{matic_checkpoint_time}` GMT'
+                                f' (`{-1*matic_checkpoint_delta.total_seconds()/3600:.1f}` hours ago)'
+                    )
+            await msg.channel.send(embed=embed)
+
+
+def get_matic_state():
+    state = {}
+    mifarm_addr = '0xab0b2ddB9C7e440fAc8E140A89c0dbCBf2d7Bbff'
+    mifarm_contract = m3.eth.contract(address=mifarm_addr, abi=TOKEN_ABI)
+    mifarm_supply = mifarm_contract.functions['totalSupply']().call()*10**-18
+    ifarm_addr = vault_addr['ifarm']['addr']
+    ifarm_contract = w3.eth.contract(address=ifarm_addr, abi=TOKEN_ABI)
+    ifarm_supply = ifarm_contract.functions['totalSupply']().call()*10**-18
+    farm_addr = FARM_ADDR
+    farm_contract = w3.eth.contract(address=farm_addr, abi=TOKEN_ABI)
+    farm_supply = farm_contract.functions['totalSupply']().call()*10**-18
+    # last checkpoint
+    rootchain_contract = w3.eth.contract(address=ROOTCHAIN_ADDR, abi=ROOTCHAIN_ABI)
+    state['last_checkpoint_block'] = rootchain_contract.functions['currentHeaderBlock']().call()
+    state['last_checkpoint_time'] = rootchain_contract.functions['headerBlocks'](state['last_checkpoint_block']).call()[3]
+    # save some info to send back
+    state['mifarm_addr'] = mifarm_addr
+    state['mifarm_supply'] = mifarm_supply
+    state['ifarm_addr'] = ifarm_addr
+    state['ifarm_supply'] = ifarm_supply
+    state['farm_addr'] = farm_addr
+    state['farm_supply'] = farm_supply
+    return state
+
+def get_portfolio(address):
+    addr = w3.toChecksumAddress(address)
+    portfolio = []
+    # pending rewards
+    rewards_claimable = 0
+    
+    # free FARM
+    reward_token = w3.eth.contract(address=FARM_ADDR, abi=TOKEN_ABI)
+    wallet_balance_display = reward_token.functions['balanceOf'](addr).call()*10**-18
+    if wallet_balance_display > 0:
+        balance_decimals = max(-1 * math.floor(math.log10(wallet_balance_display)) + 3, 2)
+        msg = f'{"wallet FARM:":16}: {wallet_balance_display:,.{balance_decimals}f}'
+        portfolio.append(msg)
+    # iFARM
+    ifarm_address = '0x1571eD0bed4D987fe2b498DdBaE7DFA19519F651'
+    ifarm_contract = w3.eth.contract(address=ifarm_address, abi=TOKEN_ABI)
+    ifarm_balance_display = ifarm_contract.functions['balanceOf'](addr).call()*10**-18
+    if ifarm_balance_display > 0:
+        balance_decimals = max(-1 * math.floor(math.log10(ifarm_balance_display)) + 3, 2)
+        msg = f'{"wallet iFARM":16}: {ifarm_balance_display:,.{balance_decimals}f}'
+        portfolio.append(msg)
+    # matic iFARM
+    mifarm_address = '0xab0b2ddB9C7e440fAc8E140A89c0dbCBf2d7Bbff'
+    mifarm_contract = m3.eth.contract(address=mifarm_address, abi=TOKEN_ABI)
+    mifarm_balance_display = mifarm_contract.functions['balanceOf'](addr).call()*10**-18
+    if mifarm_balance_display > 0:
+        balance_decimals = max(-1 * math.floor(math.log10(mifarm_balance_display)) + 3, 2)
+        msg = f'{"Matic iFARM":16}: {mifarm_balance_display:,.{balance_decimals}f}'
+        portfolio.append(msg)
+    # profitshare
+    ps_address = vault_addr['profitshare']['pool']
+    ps_contract = w3.eth.contract(address=ps_address, abi=PS_ABI)
+    ps_balance_display = ps_contract.functions['balanceOf'](addr).call()*10**-18
+    if ps_balance_display > 0:
+        balance_decimals = max(-1 * math.floor(math.log10(ps_balance_display)) + 3, 2)
+        msg = f'{"profitshare":16}: {ps_balance_display:,.{balance_decimals}f}'
+        portfolio.append(msg)
+    # vaults
+    for vault in vaults:
+        msg = ''
+        try:
+            vault_address = vault
+            vault_name = vaults[vault]['asset'].lower()
+            vault_rewards_address = vault_addr[vault_name]['pool']
+            #print(vault_name, vault_address, vault_rewards_address)
+            vault_contract = w3.eth.contract(address=vault_address, abi=VAULT_ABI)
+            pool_contract = w3.eth.contract(address=vault_rewards_address, abi=POOL_ABI)
+            wallet_balance = vault_contract.functions['balanceOf'](addr).call()
+            rewards_balance = 0
+            if vault_rewards_address is not '':
+                rewards_balance = pool_contract.functions['balanceOf'](addr).call()
+            if rewards_balance > 0 or wallet_balance > 0:
+                lptype = vaults[vault]['lptype']
+                vault_shareprice = vault_contract.functions['getPricePerFullShare']().call()
+                token_decimals = vault_contract.functions['decimals']().call()
+                rewards_balance_display = rewards_balance * vault_shareprice * 10**(-1*token_decimals*2)
+                balance_decimals = max(-1 * math.floor(math.log10(rewards_balance_display)) + 3, 2)
+                msg += f'{vault_name:16}: {rewards_balance_display:,.{balance_decimals}f}'
+                # earned rewards
+                if vault_rewards_address is not '':
+                    rewards_claimable += pool_contract.functions['earned'](addr).call()*10**-18
+                if wallet_balance > 0:
+                    wallet_balance_display = wallet_balance * vault_shareprice * 10**(-1*token_decimals*2)
+                    balance_decimals = max(-1 * math.floor(math.log10(wallet_balance)) + 3, 2)
+                    msg += f' (+ {wallet_balance_display:,.{balance_decimals}f} unstaked)'
+                if lptype == 'uniswap' or lptype == '1inch':
+                    underlying_address = vault_contract.functions['underlying']().call()
+                    # shared logic for Uniswap derivs and 1inch
+                    if lptype == 'uniswap':
+                        underlying_contract = w3.eth.contract(address=underlying_address, abi=UNIPOOL_ABI)
+                        token0_address = underlying_contract.functions['token0']().call()
+                        token1_address = underlying_contract.functions['token1']().call()
+                        underlying_token0_supply, underlying_token1_supply, ts_updated = underlying_contract.functions['getReserves']().call()
+                        token0_contract = w3.eth.contract(address=token0_address, abi=TOKEN_ABI)
+                        token1_contract = w3.eth.contract(address=token1_address, abi=TOKEN_ABI)
+                        token0_symbol = token0_contract.functions['symbol']().call()
+                        token1_symbol = token1_contract.functions['symbol']().call()
+                        token0_decimals = token0_contract.functions['decimals']().call()
+                        token1_decimals = token1_contract.functions['decimals']().call()
+                    if lptype == '1inch':
+                        underlying_contract = w3.eth.contract(address=underlying_address, abi=MOONISWAP_ABI)
+                        token0_address = underlying_contract.functions['token0']().call()
+                        token1_address = underlying_contract.functions['token1']().call()
+                        underlying_token0_supply = underlying_contract.functions['getBalanceForRemoval'](token0_address).call()
+                        underlying_token1_supply = underlying_contract.functions['getBalanceForRemoval'](token1_address).call()
+                        if token0_address == ZERO_ADDRESS:
+                            token0_symbol = 'ETH'
+                            token0_decimals = 18
+                        else:
+                            token0_contract = w3.eth.contract(address=token0_address, abi=TOKEN_ABI)
+                            token0_symbol = token0_contract.functions['symbol']().call()
+                            token0_decimals = token0_contract.functions['decimals']().call()
+                        if token1_address == ZERO_ADDRESS:
+                            token1_symbol = 'ETH'
+                            token1_decimals = 18
+                        else:
+                            token1_contract = w3.eth.contract(address=token1_address, abi=TOKEN_ABI)
+                            token1_symbol = token1_contract.functions['symbol']().call()
+                            token1_decimals = token1_contract.functions['decimals']().call()
+                    # shared logic for Uniswap derivs and 1inch
+                    underlying_supply = underlying_contract.functions['totalSupply']().call()
+                    underlying_decimals = underlying_contract.functions['decimals']().call()
+                    token0_per_underlying = underlying_token0_supply / underlying_supply
+                    token1_per_underlying = underlying_token1_supply / underlying_supply
+                    token0_balance = token0_per_underlying * (wallet_balance + rewards_balance)
+                    token1_balance = token1_per_underlying * (wallet_balance + rewards_balance)
+                    token0_balance_display = token0_balance * 10**(-1*token0_decimals)
+                    token1_balance_display = token1_balance * 10**(-1*token1_decimals)
+                    msg += f'\n - - - - - - - -: = {token0_balance_display:,.2f} {token0_symbol} + {token1_balance_display:,.2f} {token1_symbol}'
+            if msg != '':
+                portfolio.append(msg)
+        except Exception as e:
+            print(e)
+    if rewards_claimable > 0:
+        msg = f'FARM claimable  : {rewards_claimable:,.2f}'
+        portfolio.append(msg)
+    if portfolio == []:
+        portfolio.append('Portfolio has no vault deposits.')
+    return portfolio
+
+def get_value_usd(token, amt):
+    url = 'https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses={token}&vs_currencies=USD'
+    res = requests.get(url)
+    print(token, amt, res)
+
+def get_tractor_state():
+    tractor_balance_eth_display = w3.eth.get_balance(TRACTOR_ADDR)*10**-18
+    return {'eth': tractor_balance_eth_display}
+
 
 def get_twap():
     #BLOCKS_PER_DAY = int((60/12)*60*24) # 7200 at 12 sec;
@@ -735,7 +1084,12 @@ def get_profitsharestate():
     ps_rewardperday = ps_rewardrate * 3600 * 24 * 10**(-1*ps_decimals)
     ps_rewardfinishdt = datetime.datetime.fromtimestamp(ps_rewardfinish)
     ps_stake_frac = ps_totalsupply / lp_totalsupply
-    return (ps_totalsupply, ps_rewardperday, ps_rewardfinishdt, ps_stake_frac)
+    # iFARM stuff
+    ifarm_addr = vault_addr['ifarm']['addr']
+    ifarm_contract = w3.eth.contract(address=ifarm_addr, abi=VAULT_ABI)
+    ifarm_balance = lp_contract.functions['balanceOf'](ifarm_addr).call()*10**(-1*ps_decimals)
+    ifarm_supply = ifarm_contract.functions['totalSupply']().call()*10**(-1*ps_decimals)
+    return (ps_totalsupply, ps_rewardperday, ps_rewardfinishdt, ps_stake_frac, ifarm_supply, ifarm_balance)
 
 def get_vaultstate(vault):
     vault_address = vault_addr[vault]['addr']
