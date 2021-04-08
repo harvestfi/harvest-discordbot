@@ -8,6 +8,7 @@ import random
 import asyncio
 import discord
 import os
+import re
 from discord.ext.commands import Bot
 from discord.ext import commands, tasks
 from web3 import Web3
@@ -19,6 +20,7 @@ DISCORD_WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 NODE_URL = os.getenv("NODE_URL")
 NODE_URL_MATIC = os.getenv("NODE_URL_MATIC")
+NODE_URL_BSC = os.getenv("NODE_URL_BSC")
 EXPLORER_MATIC = 'https://explorer-mainnet.maticvigil.com/'
 UNIROUTER_ADDR = os.getenv("UNIROUTER_ADDR")
 UNIROUTER_ABI = os.getenv("UNIROUTER_ABI")
@@ -30,6 +32,7 @@ POOL_ABI = os.getenv("POOL_ABI")
 TOKEN_ABI = os.getenv("TOKEN_ABI")
 ROOTCHAIN_ABI = os.getenv("ROOTCHAIN_ABI")
 FARM_ADDR = '0xa0246c9032bC3A600820415aE600c6388619A14D'
+FARM_ADDR_BSC = '0x4B5C23cac08a567ecf0c1fFcA8372A45a5D33743'
 MODEL_ADDR = '0x814055779F8d2F591277b76C724b7AdC74fb82D9'
 TRACTOR_ADDR = '0xbed04C43E74150794F2ff5b62B4F73820EDaF661'
 ROOTCHAIN_ADDR = '0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287'
@@ -42,6 +45,7 @@ BLOCKS_PER_DAY = int((60/13.2)*60*24) #~7200 at 12 sec
 
 w3 = Web3(Web3.HTTPProvider(NODE_URL))
 m3 = Web3(Web3.HTTPProvider(NODE_URL_MATIC))
+b3 = Web3(Web3.HTTPProvider(NODE_URL_BSC))
 controller_contract = w3.eth.contract(address=UNIROUTER_ADDR, abi=UNIROUTER_ABI)
 
 ASSETS = {
@@ -94,6 +98,7 @@ ASSETS = {
 
 }
 
+## this is used for the portfolio command
 vaults = {
 #  '0x8e298734681adbfC41ee5d17FF8B0d6d803e7098': {'asset': 'fWETH-v0', 'decimals': 18,},
 #  '0xe85C8581e60D7Cd32Bbfd86303d2A4FA6a951Dac': {'asset': 'fDAI-v0', 'decimals': 18,},
@@ -154,6 +159,7 @@ vaults = {
 #  '0x8f5adC58b32D4e5Ca02EAC0E293D35855999436C': {'asset': 'profitshare', 'decimals': 18, },
 }
 
+# this is used for all other vault status commands
 vault_addr = {
     'fdai'        : {'addr': '0xab7FA2B2985BCcfC13c6D86b1D5A17486ab1e04C',
                      'pool': '0x15d3A64B2d5ab9E152F16593Cdebc4bB165B5B4A',
@@ -217,7 +223,7 @@ vault_addr = {
         'pool': '0xE2D9FAe95f1e68afca7907dFb36143781f917194',
         'underlying': '0xCEfF51756c56CeFFCA006cD410B03FFC46dd3a58',
         },
-    'fsushi-sushi:eth': {
+    'fsushi-eth:sushi': { # sushi:eth
         'addr': '0x5aDe382F38A09A1F8759D06fFE2067992ab5c78e',
         'pool': '0x16fBb193f99827C92A4CC22EFe8eD7390465BFa3',
         },
@@ -261,6 +267,10 @@ vault_addr = {
         'addr': '0xCC775989e76ab386E9253df5B0c0b473E22102E2',
         'pool': '0x01f9CAaD0f9255b0C0Aa2fBD1c1aA06ad8Af7254',
         },
+    'fcrv-usdp': {
+        'addr': '0x02d77f6925f4ef89EE2C35eB3dD5793f5695356f',
+        'pool': '0x15AEB9B209FEC67c672dBF5113827daB0b80f390',
+        },
     'uniswap': {
         'addr': '0x514906FC121c7878424a5C928cad1852CC545892',
         'pool': '0x99b0d6641A63Ce173E6EB063b3d3AED9A35Cf9bf',
@@ -286,6 +296,8 @@ vault_addr = {
         'pool': '0x91B5cD52fDE8dbAC37C95ECafEF0a70bA4c182fC',
         },
     'f1inch-eth:dai': {
+#        'addr': '',
+#        'pool': '',
         'addr': '0x8e53031462E930827a8d482e7d80603B1f86e32d',
         'pool': '0xDa5E9706274D88bbf1bD1877a9b462fC40cDcfAd',
         },
@@ -345,7 +357,7 @@ vault_addr = {
         'addr': '0x8334A61012A779169725FcC43ADcff1F581350B7',
         'pool': '0x8Dc427Cbcc75cAe58dD4f386979Eba6662f5C158',
         },
-    'funi-ust:maapl': {
+    'funi-ust:maapl': { #ust:maapl
         'addr': '0x11804D69AcaC6Ae9466798325fA7DE023f63Ab53',
         'pool': '0xc02d1Da469d68Adc651Dd135d1A7f6b42F4d1A57',
         },
@@ -361,14 +373,86 @@ vault_addr = {
         'addr': '0x1571eD0bed4D987fe2b498DdBaE7DFA19519F651',
         'pool': '',
         },
-    'funi-wbtc:klon': {
+    'funi-wbtc:klon': { #wbtc:klon
         'addr': '0xB4E3fC276532f27Bd0F738928Ce083A3b064ba61',
         'pool': '0x719d70457658358f2e785B38307CfE24071b7417',
         },
-    'funi-wbtc:kbtc': {
+    'funi-wbtc:kbtc': { #wbtc:kbtc
         'addr': '0x5cd9Db40639013A08d797A839C9BECD6EC5DCD4D',
         'pool': '0xdD496A6Ba1B4Cf2b3ef42dEf132e2B2c570941FE',
         },
+    'fsushi-eth:ust': {
+        'addr': '0x4D4D85c6a1ffE6Bb7a1BEf51c9E2282893feE521',
+        'pool': '0x59eeb34065dB1621c68d26f37ffEFf3A89E5FA8b',
+        },
+    'funi-ust:mtwtr': { #ust:mtwtr
+        'addr': '0xb37c79f954E3e1A4ACCC14A5CCa3E46F226038b7',
+        'pool': '0x677AD66025063bE55B070685E618a84FF3dd62be',
+        },
+    'funi-ust:mnflx': { #ust:mnflx
+        'addr': '0x99C2564C9D4767C13E13F38aB073D4758af396Ae',
+        'pool': '0x937D4b84f139bec548b825FdCE33B172C5Bf755a',
+        },
+    'fcrv-link': {
+        'addr': '0x24C562E24A4B5D905f16F2391E07213efCFd216E',
+        'pool': '0x9c6FbDBF59808CD920fDb166c25E2E9FcF708dD1',
+        },
+    'fsushi': {
+        'addr': '0x274AA8B58E8C57C4e347C8768ed853Eb6D375b48',
+        'pool': '0xf550804Ebd6f89CdC9EC8E92CE8DE91A2F64a82E',
+        },
+    'fsushi-wbtc:eth-hodl': { #wbtc:eth
+        'addr': '0xB677bcA369f2523F62862F88d83471D892dD55B9',
+        'pool': '0x08aA65118996eaa61372B65978Cfa684F2C749b2',
+        },
+    'fsushi-eth:usdt-hodl': {
+        'addr': '0x4D4B6f8EFb685b774234Fd427201b3a9bF36ffc8',
+        'pool': '0x0c67FBa277A3FE1B0a792ef5bc798cBbDA15a7f5',
+        },
+    'fsushi-usdc:eth-hodl': { #usdc:eth
+        'addr': '0x5774260CcD87F4FfFc4456260857207fc8BCb89A',
+        'pool': '0x378C314028071C92efE15d6990B6cf93594fCB9D',
+        },
+    'fsushi-dai:eth-hodl': { #dai:eth
+        'addr': '0x29EC64560ab14d3166222Bf07c3F29c4916E0027',
+        'pool': '0xF5833723b150929D1Fddf785ED9D92eEe722387d',
+        },
+    'funi-rope20:eth': { #rope20:eth
+        'addr': '0xAF9486E3DA0cE8d125aF9b256b3ecd104a3031B9',
+        'pool': '0x14ac1BDdd9160866590C6c4ec16853A1510845b9',
+        },
+    'funi-dudes20:eth': { #dudes20:eth
+        'addr': '0x1E5f4e7127ea3981551D2Bf97dCc8f17a4ECEbEf',
+        'pool': '0x3B808A7d8CCdF8893d1360ff421beF4440376842',
+        },
+    'funi-eth:mask20': {
+        'addr': '0xF2a671645D0DF54d2f03E9ad7916c8F7368D1C29',
+        'pool': '0xC5fc56779b5925218D2Cdac093d0bFc6de7Cc2D1',
+        },
+    'funi-muse:eth': {
+        'addr': '0xc45d471c77ff31C39474d68a5080Fe1FfACDBC04',
+        'pool': '0x743BD82331CAe227Fa2c8c97f345A6846f8383b1',
+        },
+    'funi-mcat20:eth': {
+        'addr': '0x0cA19915439C12B16C0A8C119eC05fA801365a15',
+        'pool': '0xE7E1C3624188052a2367B63048a32A7429980113',
+        },
+    'f1inch-eth:1inch': {
+        'addr': '0xFCA949E34ecd9dE519542CF02054DE707Cf361cE',
+        'pool': '0x16b5089ED717409849b2748AC73adFbfE7ec0301',
+        },
+    'f1inch-1inch:usdc': {
+        'addr': '0xF174DDDD9DBFfeaeA5D908a77d695a77e53025b3',
+        'pool': '0x516658d83A68747C34FD5aeCba7068ad4bD4783d',
+        },
+    'f1inch-1inch:wbtc': {
+        'addr': '0xDdB4669f39c03A6edA92ffB5B78A9C1a74615F1b',
+        'pool': '0xd8a3C7d1dEcCB8445a4391F6052E5a0726f2F270',
+        },
+#    'f': {
+#        'addr': '',
+#        'pool': '',
+#       },
 }
 
 earlyemissions = [
@@ -428,16 +512,16 @@ async def update_price():
     router_contract = w3.eth.contract(address=pool['router'], abi=UNIROUTER_ABI)
 
     # fetch pool state
-    print(f'fetching pool reserves for {basetoken_name} ({basetoken_addr}) and {quotetoken_name} ({quotetoken_addr})...')
+    print(f'update_price: fetching pool reserves for {basetoken_name} ({basetoken_addr}) and {quotetoken_name} ({quotetoken_addr})...')
     poolvals = pool_contract.functions['getReserves']().call()
 
     # calculate price
-    print(f'calculating price...')
+    print(f'update_price: calculating price...')
     atoms_per_basetoken = 10**basetoken_contract.functions['decimals']().call()
     atoms_per_quotetoken = 10**quotetoken_contract.functions['decimals']().call()
-    print(f'atoms per basetoken {basetoken_name}: {atoms_per_basetoken}; atoms per quotetoken {quotetoken_name}: {atoms_per_quotetoken}')
+    print(f'update_price: atoms per basetoken {basetoken_name}: {atoms_per_basetoken}; atoms per quotetoken {quotetoken_name}: {atoms_per_quotetoken}')
     token_price = router_contract.functions['quote'](atoms_per_basetoken, poolvals[basetoken_index], poolvals[quotetoken_index]).call() / atoms_per_quotetoken
-    print(f'base pool price: {token_price}')
+    print(f'update_price: base pool price: {token_price}')
     oracle_price = 1
     for oracle in pool['oracles']:
         oracle_contract = w3.eth.contract(address=oracle['addr'], abi=UNIPOOL_ABI)
@@ -449,19 +533,19 @@ async def update_price():
         oraclevals = oracle_contract.functions['getReserves']().call()
         oracle_price_step = router_contract.functions['quote'](atoms_per_oracle_basetoken, oraclevals[oracle['basetoken_index']], oraclevals[oracle['quotetoken_index']]).call()  / atoms_per_oracle_quotetoken
         oracle_price = oracle_price * oracle_price_step
-    print(f'oracle price: {oracle_price}')
+    print(f'update_price: oracle price: {oracle_price}')
     price = token_price * oracle_price
 
     # update price
     price_decimals = max(-1 * math.floor(math.log10(price)) + 1, 2)
-    print(f'updating the price...')
+    print(f'update_price: updating the price...')
     msg = f'${price:.{price_decimals}f} {basetoken_name}'
     # twap hack
     #if (update_index % 3 == 0):
     #    msg = f'${get_twap():0.2f} FARM TWAP'
 
     new_price = discord.Streaming(name=msg,url=f'https://etherscan.io/token/basetoken["addr"]')
-    print(msg)
+    print(f'update_price: post: {msg}')
     await client.change_presence(activity=new_price)
     update_index += 1
 
@@ -502,6 +586,19 @@ async def on_message(msg):
                                 ':chart_with_upwards_trend: improve me [on GitHub](https://github.com/brandoncurtis/harvest-discordbot)'
                     )
             await msg.channel.send(embed=embed)
+        if '!bfarm' or '!bsc' in msg.content:
+            farm_bsc = b3.eth.contract(address=FARM_ADDR_BSC, abi=TOKEN_ABI)
+            farm_bsc_supply = farm_bsc.functions['totalSupply']().call()
+            farm_bsc_supply_display = farm_bsc_supply*10**-18
+            embed = discord.Embed(
+                    title=':tractor: bFARM: FARM on BSC',
+                    description=f':triangular_ruler: There is `{farm_bsc_supply_display:,.2f}` FARM on BSC\n'
+                    f':map:  [{FARM_ADDR_BSC}](https://bscscan.com/address/{FARM_ADDR_BSC})\n'
+                    f':bridge_at_night: Move FARM between ETH and BSC using the [Anyswap bridge](https://multichain.xyz)\n'
+                    f':arrows_counterclockwise: Trade FARM on [Pancakeswap](https://exchange.pancakeswap.finance/#/swap?inputCurrency=0x4b5c23cac08a567ecf0c1ffca8372a45a5d33743)',
+                    )
+            await msg.channel.send(embed=embed)
+        # information on the harvesting address
         if '!tractor' in msg.content:
             tractor_balance_eth_display = get_tractor_state()['eth']
             embed = discord.Embed(
@@ -510,6 +607,7 @@ async def on_message(msg):
                                 f':fuelpump: fuel gauge: {tractor_balance_eth_display:.4f} ETH',
                     )
             await msg.channel.send(embed=embed)
+        # information about how Harvest distributes incentives
         if '!payout' in msg.content:
             embed = discord.Embed(
                     title='When do I get the CRV/SWRV/UNI/&etc? :thinking:',
@@ -621,10 +719,10 @@ async def on_message(msg):
                 vault_invested = vault_total - vault_buffer
                 embed = discord.Embed(
                         title=f'{vault} Vault State :bank::mag:',
-                        description=f':map: {vault} address: [{address}](https://etherscan.io/address/{address})\n'
-                                f':moneybag: {vault} share price = {shareprice} {underlying}\n'
-                                f':sponge: {underlying} withdrawal buffer = {vault_buffer:,.4f} {underlying}\n'
-                                f':bar_chart: {underlying} invested = {vault_invested:,.4f} '
+                        description=f':map: address: [{address}](https://etherscan.io/address/{address})\n'
+                                f':moneybag: share price = {shareprice} {underlying}\n'
+                                f':sponge: withdrawal buffer = {vault_buffer:,.4f} {underlying}\n'
+                                f':bar_chart: invested = {vault_invested:,.4f} '
                                 f'{underlying} ({100*vault_invested/vault_total:0.2f}%, target {100*vault_target:0.2f}%)\n'
                                 f':compass: vault strategy: [{vault_strat}](https://etherscan.io/address/{vault_strat})\n'
                         )
@@ -640,7 +738,8 @@ async def on_message(msg):
                 else:
                     embed.description += f':alarm_clock: no strategy updates are pending; [subscribe to updates on Twitter](https://twitter.com/farmer_fud)'
                 await msg.channel.send(embed=embed)
-            except:
+            except Exception as e:
+                print(f'error: vault {vault}: {e}')
                 embed = discord.Embed(
                         title=f'{vault} Vault State :bank::mag:',
                         description=f':bank: `!vault vaultname`: Harvest vault state of supported vaults\n'
@@ -681,8 +780,18 @@ async def on_message(msg):
         if '!returns' in msg.content:
             try:
                 vault = msg.content.split(' ')[-2].lower()
-                bal = float(msg.content.split(' ')[-1])
+                amount_str = msg.content.split(' ')[-1]
+                # get vault info
                 delta_day, delta_week, delta_month, vault_delta_day, vault_delta_week, vault_delta_month = get_poolreturns(vault)
+                bal = 0
+                if amount_str[-1] == '%':
+                    try:
+                        vault_address, vault_shareprice, vault_total, vault_buffer, vault_target, vault_strat, vault_strat_future, vault_strat_future_time = get_vaultstate(vault)
+                        bal = float(amount_str[:-1]) / 100 * vault_total
+                    except:
+                        pass
+                else:
+                    bal = float(amount_str)
                 weekmsg = ''
                 monthmsg = ''
                 daymsg = f'\nIn the last day: `{vault_delta_day*100:.2f}%` plus `{bal*delta_day:.4f}` FARM'
@@ -698,7 +807,7 @@ async def on_message(msg):
                         )
                 await msg.channel.send(embed=embed)
             except Exception as e:
-                print(e)
+                print(f'error: returns {vault}: {e}')
                 embed = discord.Embed(
                         title=f':bank: `!returns vaultname #`: historical rewards to supported vaults\n',
                         description=':pencil: note: must include # of tokens to calculate returns on\n'
@@ -728,18 +837,20 @@ async def on_message(msg):
                                 f'Please provide a valid Ethereum address.\n'
                         )
                 await msg.channel.send(embed=embed)
+
         if '!limit usdc' in msg.content:
             sell_farm_usdc_url = 'https://api.0x.org/sra/v3/orders?makerAssetData=0xf47261b0000000000000000000000000a0246c9032bc3a600820415ae600c6388619a14d&takerAssetData=0xf47261b0000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
             res = requests.get(sell_farm_usdc_url)
             buy_orders = res.json()["records"]
             buy_desc = []
             for order in buy_orders:
-                order = order["order"]
-                buy_amount = int(order["takerAssetAmount"])*10**-6
-                sell_amount = int(order["makerAssetAmount"])*10**-18
+                buy_amount = int(order["order"]["takerAssetAmount"])*10**-6
+                buy_amount_remaining = int(order["metaData"]["remainingFillableTakerAssetAmount"])*10**-6
+                sell_amount = int(order["order"]["makerAssetAmount"])*10**-18
                 buy_price = sell_amount / buy_amount
                 sell_price = buy_amount / sell_amount
-                buy_desc.append(f'`{sell_price:07.2f}` USDC: `{sell_amount:.2f}` FARM')
+                sell_amount_remaining = buy_price * buy_amount_remaining
+                buy_desc.append(f'`{sell_price:07.2f}` USDC: `{sell_amount_remaining:.2f}` FARM')
             buy_desc.sort(reverse=True)
             embed = discord.Embed(
                     title=f':mag: FARM limit sell orders',
@@ -752,11 +863,11 @@ async def on_message(msg):
             buy_orders = res.json()["records"]
             buy_desc = []
             for order in buy_orders:
-                order = order["order"]
-                buy_amount = int(order["takerAssetAmount"])*10**-18
+                buy_amount = int(order["order"]["takerAssetAmount"])*10**-18
+                buy_amount_remaining = int(order["metaData"]["remainingFillableTakerAssetAmount"])*10**-18
                 sell_amount = int(order["makerAssetAmount"])*10**-6
                 buy_price = sell_amount / buy_amount
-                buy_desc.append(f'`{buy_price:07.2f}` USDC: `{buy_amount:.2f}` FARM')
+                buy_desc.append(f'`{buy_price:07.2f}` USDC: `{buy_amount_remaining:.2f}` FARM')
             buy_desc.sort(reverse=True)
             embed = discord.Embed(
                     title=f':mag: FARM limit buy orders',
@@ -771,12 +882,13 @@ async def on_message(msg):
             buy_orders = res.json()["records"]
             buy_desc = []
             for order in buy_orders:
-                order = order["order"]
-                buy_amount = int(order["takerAssetAmount"])*10**-18
-                sell_amount = int(order["makerAssetAmount"])*10**-18
+                buy_amount = int(order["order"]["takerAssetAmount"])*10**-18 # ETH
+                buy_amount_remaining = int(order["metaData"]["remainingFillableTakerAssetAmount"])*10**-18 # ETH
+                sell_amount = int(order["order"]["makerAssetAmount"])*10**-18 # FARM
                 buy_price = sell_amount / buy_amount
                 sell_price = buy_amount / sell_amount
-                buy_desc.append(f'`{sell_price:07.3f}` ETH: `{sell_amount:.2f}` FARM')
+                sell_amount_remaining = buy_price * buy_amount_remaining
+                buy_desc.append(f'`{sell_price:07.3f}` ETH: `{sell_amount_remaining:.2f}` FARM')
             buy_desc.sort(reverse=True)
             embed = discord.Embed(
                     title=f':mag: FARM limit sell orders',
@@ -789,11 +901,11 @@ async def on_message(msg):
             buy_orders = res.json()["records"]
             buy_desc = []
             for order in buy_orders:
-                order = order["order"]
-                buy_amount = int(order["takerAssetAmount"])*10**-18
-                sell_amount = int(order["makerAssetAmount"])*10**-18
+                buy_amount = int(order["order"]["takerAssetAmount"])*10**-18 # FARM
+                buy_amount_remaining = int(order["metaData"]["remainingFillableTakerAssetAmount"])*10**-18 # FARM
+                sell_amount = int(order["order"]["makerAssetAmount"])*10**-18 # ETH
                 buy_price = sell_amount / buy_amount
-                buy_desc.append(f'`{buy_price:07.3f}` ETH: `{buy_amount:.2f}` FARM')
+                buy_desc.append(f'`{buy_price:07.3f}` ETH: `{buy_amount_remaining:.2f}` FARM')
             buy_desc.sort(reverse=True)
             embed = discord.Embed(
                     title=f':mag: FARM limit buy orders',
@@ -1016,13 +1128,13 @@ def get_poolreturns(vault):
         except:
             ps_delta_month = 0
         return ps_delta_day, ps_delta_week, ps_delta_month, 0, 0, 0
-    vault_address = vault_addr[vault]['addr']
+    vault_address = get_vaultaddress(vault)
     vault_contract = w3.eth.contract(address=vault_address, abi=VAULT_ABI)
     try:
         vault_decimals = int(vault_contract.functions['decimals']().call())
     except:
         vault_decimals = 18
-    pool_addr = vault_addr[vault]['pool']
+    pool_addr = get_pooladdress(vault)
     pool_contract = w3.eth.contract(address=pool_addr, abi=POOL_ABI)
     reward_current = pool_contract.functions['earned'](MODEL_ADDR).call()
     vault_current = vault_contract.functions['getPricePerFullShare']().call()
@@ -1091,8 +1203,61 @@ def get_profitsharestate():
     ifarm_supply = ifarm_contract.functions['totalSupply']().call()*10**(-1*ps_decimals)
     return (ps_totalsupply, ps_rewardperday, ps_rewardfinishdt, ps_stake_frac, ifarm_supply, ifarm_balance)
 
+def get_vaultaddress(vault):
+    vault_address = None
+    if vault in vault_addr:
+        vault_address = vault_addr[vault]['addr']
+    else:
+        print(f'vaultstate: {vault} not in vault_addr list')
+        print(f'vaultstate: {vault} split into {re.split("-|:| ", vault)}')
+        vault_prefix, vault_asset0, vault_asset1, *vault_postfix = re.split('-|:| ', vault)
+        if len(vault_postfix) == 0:
+            vault_name = f'{vault_prefix}-{vault_asset0}:{vault_asset1}'
+            vault_name_rev = f'{vault_prefix}-{vault_asset1}:{vault_asset0}'
+            if vault_name in vault_addr:
+                vault_address = vault_addr[vault_name]['addr']
+            else:
+                vault_address = vault_addr[vault_name_rev]['addr']
+        else:
+            vault_name = f'{vault_prefix}-{vault_asset0}:{vault_asset1}-{vault_postfix[0]}'
+            vault_name_rev = f'{vault_prefix}-{vault_asset1}:{vault_asset0}-{vault_postfix[0]}'
+            if vault_name in vault_addr:
+                vault_address = vault_addr[vault_name]['addr']
+            else:
+                vault_address = vault_addr[vault_name_rev]['addr']
+    print(f'get_vaultaddress: {vault_address}')
+    return vault_address
+
+def get_pooladdress(vault):
+    pool_address = None
+    if vault in vault_addr:
+        pool_address = vault_addr[vault]['pool']
+    else:
+        print(f'vaultstate: {vault} not in vault_addr list')
+        print(f'vaultstate: {vault} split into {re.split("-|:| ", vault)}')
+        vault_prefix, vault_asset0, vault_asset1, *vault_postfix = re.split('-|:| ', vault)
+        if len(vault_postfix) == 0:
+            vault_name = f'{vault_prefix}-{vault_asset0}:{vault_asset1}'
+            vault_name_rev = f'{vault_prefix}-{vault_asset1}:{vault_asset0}'
+            if vault_name in vault_addr:
+                pool_address = vault_addr[vault_name]['pool']
+            else:
+                pool_address = vault_addr[vault_name_rev]['pool']
+        else:
+            vault_name = f'{vault_prefix}-{vault_asset0}:{vault_asset1}-{vault_postfix[0]}'
+            vault_name_rev = f'{vault_prefix}-{vault_asset1}:{vault_asset0}-{vault_postfix[0]}'
+            if vault_name in vault_addr:
+                pool_address = vault_addr[vault_name]['pool']
+            else:
+                pool_address = vault_addr[vault_name_rev]['pool']
+    print(f'get_pooladdress: {pool_address}')
+    return pool_address
+
 def get_vaultstate(vault):
-    vault_address = vault_addr[vault]['addr']
+    # try different orderings of the assets
+    vault_address = get_vaultaddress(vault)
+    if vault_address is None:
+        return None
     vault_contract = w3.eth.contract(address=vault_address, abi=VAULT_ABI)
     vault_strat = vault_contract.functions['strategy']().call()
     vault_strat_future = vault_contract.functions['futureStrategy']().call()
