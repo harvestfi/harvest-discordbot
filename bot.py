@@ -31,13 +31,14 @@ PS_ABI = os.getenv("PS_ABI")
 POOL_ABI = os.getenv("POOL_ABI")
 TOKEN_ABI = os.getenv("TOKEN_ABI")
 ROOTCHAIN_ABI = os.getenv("ROOTCHAIN_ABI")
+FUSE_TOKEN_ABI = os.getenv("FUSE_TOKEN_ABI")
 FARM_ADDR = '0xa0246c9032bC3A600820415aE600c6388619A14D'
 FARM_ADDR_BSC = '0x4B5C23cac08a567ecf0c1fFcA8372A45a5D33743'
 MODEL_ADDR = '0x814055779F8d2F591277b76C724b7AdC74fb82D9'
 TRACTOR_ADDR = '0xbed04C43E74150794F2ff5b62B4F73820EDaF661'
 ROOTCHAIN_ADDR = '0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287'
 TRACTOR_ETH_MINLIMIT = 3.0
-UPDATE_SECONDS = 10
+UPDATE_SECONDS = 3.5
 
 ONE_18DEC = 1000000000000000000
 ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
@@ -156,7 +157,8 @@ vaults = {
   '0x859222DD0B249D0ea960F5102DaB79B294d6874a': {'asset': 'f1INCH-ETH:WBTC', 'decimals': 18, 'type': 'timelock', 'lptype': '1inch',},
   '0x4bf633A09bd593f6fb047Db3B4C25ef5B9C5b99e': {'asset': 'f1INCH-ETH:USDT', 'decimals': 18, 'type': 'timelock', 'lptype': '1inch',},
   '0xD162395C21357b126C5aFED6921BC8b13e48D690': {'asset': 'f1INCH-ETH:USDC', 'decimals': 18, 'type': 'timelock', 'lptype': '1inch',},
-#  '0x8f5adC58b32D4e5Ca02EAC0E293D35855999436C': {'asset': 'profitshare', 'decimals': 18, },
+  '0x1851A8fA2ca4d8Fb8B5c56EAC1813Fd890998EFc': {'asset': 'fUNIv3-UST:USDT', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
+#  '0xADD': {'asset': 'name', 'type': 'timelock', 'decimals': 18, 'type': 'timelock', 'lptype': 'none',},
 }
 
 # this is used for all other vault status commands
@@ -449,6 +451,10 @@ vault_addr = {
         'addr': '0xDdB4669f39c03A6edA92ffB5B78A9C1a74615F1b',
         'pool': '0xd8a3C7d1dEcCB8445a4391F6052E5a0726f2F270',
         },
+    'funiv3-ust:usdt': {
+        'addr': '0x1851A8fA2ca4d8Fb8B5c56EAC1813Fd890998EFc',
+        'pool': '0x611aC252ED4bF54b7980ff64bc94058F5Dcb5bB2',
+       },
 #    'f': {
 #        'addr': '',
 #        'pool': '',
@@ -586,7 +592,8 @@ async def on_message(msg):
                                 ':chart_with_upwards_trend: improve me [on GitHub](https://github.com/brandoncurtis/harvest-discordbot)'
                     )
             await msg.channel.send(embed=embed)
-        if '!bfarm' or '!bsc' in msg.content:
+        # information about Harvest on BSC
+        if '!bsc' in msg.content or '!bfarm' in msg.content:
             farm_bsc = b3.eth.contract(address=FARM_ADDR_BSC, abi=TOKEN_ABI)
             farm_bsc_supply = farm_bsc.functions['totalSupply']().call()
             farm_bsc_supply_display = farm_bsc_supply*10**-18
@@ -826,7 +833,9 @@ async def on_message(msg):
                 for i in range(0, len(portfolio), 25):
                     embed = discord.Embed(
                             title=f':bank: Portfolio for `{address}`\n',
-                            description= f'Balances are listed in the underlying token. [Etherscan ↗](https://etherscan.io/address/{address})\n'
+                            description= f'Balances are listed in the underlying token. '
+                                         f'[Etherscan ↗](https://etherscan.io/address/{address}) '
+                                         f'[Debank ↗](https://debank.com/profile/{address}) '
                                     + '```' + "\n".join(portfolio[i:i+25]) + '```'
                             )
                     await msg.channel.send(embed=embed)
@@ -935,6 +944,35 @@ async def on_message(msg):
                                 f' (`{-1*matic_checkpoint_delta.total_seconds()/3600:.1f}` hours ago)'
                     )
             await msg.channel.send(embed=embed)
+        if '!borrow' in msg.content:
+            borrow_state = get_borrow_state()
+            embed = discord.Embed(
+                    title=f'FARMstead Lending Pool\n',
+                    description=f'Borrow against FARM in the RARIxHARVEST [FARMstead Lending Pool](https://app.rari.capital/fuse/pool/24)\n'
+                                f'`FARM:  {borrow_state["farm"]["collateral"]:,.2f} ({100*borrow_state["farm"]["borrowed"] / borrow_state["farm"]["collateral"]:,.2f}% borrowed)`\n'
+                                f'`iFARM: {borrow_state["ifarm"]["collateral"]:,.2f} ({100*borrow_state["ifarm"]["borrowed"] / borrow_state["ifarm"]["collateral"]:,.2f}% borrowed)`\n'
+                                f'`USDC:  {borrow_state["usdc"]["collateral"]:,.2f} ({100*borrow_state["usdc"]["borrowed"] / borrow_state["usdc"]["collateral"]:,.2f}% borrowed)`\n'
+                    )
+            await msg.channel.send(embed=embed)
+
+def get_borrow_state():
+    state = {}
+    fuse_farm_addr = '0xD9FE46E9a03eDb7F863B5992D91bA9b24F31DdEd'
+    fuse_farm_contract = w3.eth.contract(address=fuse_farm_addr, abi=FUSE_TOKEN_ABI)
+    state['farm'] = {}
+    state['farm']['collateral'] = fuse_farm_contract.functions['totalSupply']().call() * 10 ** -18
+    state['farm']['borrowed'] = fuse_farm_contract.functions['totalBorrows']().call() * 10 ** -18
+    fuse_ifarm_addr = '0xbe9c32D18668b4d1cD149291d268bC5258318F0b'
+    fuse_ifarm_contract = w3.eth.contract(address=fuse_ifarm_addr, abi=FUSE_TOKEN_ABI)
+    state['ifarm'] = {}
+    state['ifarm']['collateral'] = fuse_ifarm_contract.functions['totalSupply']().call() * 10 ** -18
+    state['ifarm']['borrowed'] = fuse_ifarm_contract.functions['totalBorrows']().call() * 10 ** -18
+    fuse_usdc_addr = '0xf6BD560131c1BB8591Cf864cDD51817FD5657061'
+    fuse_usdc_contract = w3.eth.contract(address=fuse_usdc_addr, abi=FUSE_TOKEN_ABI)
+    state['usdc'] = {}
+    state['usdc']['collateral'] = fuse_usdc_contract.functions['totalSupply']().call() * 10 ** -6
+    state['usdc']['borrowed'] = fuse_usdc_contract.functions['totalBorrows']().call() * 10 ** -6
+    return state
 
 
 def get_matic_state():
@@ -1259,16 +1297,28 @@ def get_vaultstate(vault):
     if vault_address is None:
         return None
     vault_contract = w3.eth.contract(address=vault_address, abi=VAULT_ABI)
-    vault_strat = vault_contract.functions['strategy']().call()
-    vault_strat_future = vault_contract.functions['futureStrategy']().call()
-    vault_strat_future_time = int(vault_contract.functions['strategyUpdateTime']().call())
     vault_decimals = int(vault_contract.functions['decimals']().call())
     vault_shareprice = vault_contract.functions['getPricePerFullShare']().call()*10**(-1*vault_decimals)
-    vault_total = vault_contract.functions['underlyingBalanceWithInvestment']().call()*10**(-1*vault_decimals)
-    vault_buffer = vault_contract.functions['underlyingBalanceInVault']().call()*10**(-1*vault_decimals)
-    vault_target_numerator = vault_contract.functions['vaultFractionToInvestNumerator']().call()
-    vault_target_denominator = vault_contract.functions['vaultFractionToInvestDenominator']().call()
-    vault_target = vault_target_numerator / vault_target_denominator
+    vault_total = 0
+    vault_buffer = 0
+    vault_target = 0
+    try:
+        vault_total = vault_contract.functions['underlyingBalanceWithInvestment']().call()*10**(-1*vault_decimals)
+        vault_buffer = vault_contract.functions['underlyingBalanceInVault']().call()*10**(-1*vault_decimals)
+        vault_target_numerator = vault_contract.functions['vaultFractionToInvestNumerator']().call()
+        vault_target_denominator = vault_contract.functions['vaultFractionToInvestDenominator']().call()
+        vault_target = vault_target_numerator / vault_target_denominator
+    except Exception as e:
+        pass
+    vault_strat = ZERO_ADDRESS
+    vault_strat_future = ZERO_ADDRESS
+    vault_strat_future_time = 0
+    try:
+        vault_strat = vault_contract.functions['strategy']().call()
+        vault_strat_future = vault_contract.functions['futureStrategy']().call()
+        vault_strat_future_time = int(vault_contract.functions['strategyUpdateTime']().call())
+    except Exception as e:
+        pass
     return (vault_address, vault_shareprice, vault_total, vault_buffer, vault_target, vault_strat, vault_strat_future, vault_strat_future_time)
 
 def main():
